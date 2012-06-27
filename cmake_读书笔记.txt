@@ -1,0 +1,82 @@
+CMakeLists.txt
+-----------------------------------------
+# Project name
+PROJECT(HELLO)
+
+# 定义变量
+SET(HELLO_SOURCE_DIR ./src/)
+SET(HELLO_BINARY_DIR ./bin/)
+
+# Source code subdirectories
+SUBDIRS(src2 test)
+
+# Create a library from the hello.cxx file
+ADD_LIBRARY(Hello hello.c) #自指定的list中产生静态库。如果在库名后加SHARED参数则动态库。
+
+# Location of library include files
+INCLUDE_DIRECTORIES(${HELLO_SOURCE_DIR}/include)
+
+# Library location for the linker
+LINK_DIRECTORIES(${HELLO_BINARY_DIR}/src)
+
+# helloDemo executable built from demo.c
+ADD_EXECUTABLE(helloDemo demo.c) #自指定的list中产生执行档
+
+# Link the executable to the Hello library.
+TARGET_LINK_LIBRARIES(helloDemo Hello)
+----------------------------------------------
+CMake的scripting language
+
+以分號或空格區隔
+Lists A;B;C 
+COMMAND(參數1  “參數2 包含空白 ABC” ${A_LIST} “${A_STRING}”)
+set(CMAKE_C_COMPILER "g++") #指定.c文件用g++编译器
+MESSAGE([SEND_ERROR | STATUS | FATAL_ERROR] "message to display"
+...)
+
+
+eg:
+TARGET_LINK_LIBRARIES(myTarget lib2 lib2)
+FIND_LIBRARY(MY_LIB NAMES my1 my2 PATHS /for /bar)
+SET(A_LIST ${A_LIST} foo)
+SET(A_STRING “${A_STRING} bar”)
+
+条件控制：
+IF(CONDITION)  #IF中的变量可直接引用而不要用${}来引用
+MESSAGE(“Yes”)
+ELSE(CONDITION)
+MESSAGE(“No”)
+ENDIF(CONDITION)
+
+FOREACH(k A B C)
+   MESSAGE(“${k}: ${${k}}”)
+ENDFOREACH(k)
+
+MACRO(MY_MACRO arg1 arg2)
+   SET(${arg1} “${${arg2}}”)
+ENDMACRO(MY_MACRO)
+MY_MACRO(A B)
+
+
+一个例子：
+# CMakeLists.txt
+PROJECT( fdclock )
+CMakeLists.txt
+FIND_PACKAGE( PkgConfig )
+PKG_CHECK_MODULES( cairo REQUIRED cairo )
+INCLUDE_DIRECTORIES( ${cairo_INCLUDE_DIRS} )
+LINK_DIRECTORIES( ${cairo_LIBRARY_DIRS} )
+SET( fdclock_SRCS fdclock.c
+                  fdface.c
+				                    fdhand.c
+									                  fdlogo.c
+													                    findargb.c )
+ADD_EXECUTABLE( fdclock ${fdclock_SRCS} )
+TARGET_LINK_LIBRARIES( fdclock ${cairo_LIBRARIES} )
+INSTALL( TARGETS fdclock 
+         DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+
+
+
+
+
