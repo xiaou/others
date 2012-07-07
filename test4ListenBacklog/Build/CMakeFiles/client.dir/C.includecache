@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/spring/myGits/others/test4ListenBacklog/client.c
+netinet/in.h
+-
+sys/types.h
+-
+sys/socket.h
+-
+unistd.h
+-
+pthread.h
+-
+iostream
+-
+string.h
+-
+

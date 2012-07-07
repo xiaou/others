@@ -1,0 +1,34 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(test4TCP)
+
+SET(CMAKE_C_COMPILER "g++")
+SET(SRC4Client client.c)
+SET(SRC4Server server.c)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
+
+# target
+
+ADD_EXECUTABLE(client ${SRC4Client})
+ADD_EXECUTABLE(server ${SRC4Server})
+TARGET_LINK_LIBRARIES(client pthread)
+
+
+# cp server_config.txt
+
+IF(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/server_config.txt)
+MESSAGE(FATAL_ERROR "where is my server_config.txt in ${CMAKE_CURRENT_SOURCE_DIR}?")
+ENDIF(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/server_config.txt)
+
+IF(NOT EXISTS ${EXECUTABLE_OUTPUT_PATH}/)
+FILE(MAKE_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+ENDIF(NOT EXISTS ${EXECUTABLE_OUTPUT_PATH}/)
+
+EXEC_PROGRAM(cp 
+ARGS 
+${CMAKE_CURRENT_SOURCE_DIR}/server_config.txt 
+${EXECUTABLE_OUTPUT_PATH}/)
+
+
+
