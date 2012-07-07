@@ -1,0 +1,2 @@
+/home/spring/myGits/cmake_study/test4UDP_cmake/Build/src/CMakeFiles/client.dir
+/home/spring/myGits/cmake_study/test4UDP_cmake/Build/src/CMakeFiles/server.dir
