@@ -23,7 +23,8 @@ void sendTCP_SYN()
 	struct sockaddr_in sock_addr;
 	sock_addr.sin_family = AF_INET;
 	sock_addr.sin_port = htons(4333);
-	sock_addr.sin_addr.s_addr = inet_addr("192.168.44.1"); //htonl(INADDR_ANY);
+	sock_addr.sin_addr.s_addr = //inet_addr("192.168.44.1"); 
+	                            htonl(INADDR_ANY);
 	memset(sock_addr.sin_zero, 0x00, 8);
 
 	if( connect(sock_fd, (struct sockaddr *)&sock_addr, sizeof(struct sockaddr_in)) != 0 )

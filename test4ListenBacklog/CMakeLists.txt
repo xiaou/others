@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.7)
 
 project(test4TCP)
 
@@ -32,7 +32,7 @@ ${EXECUTABLE_OUTPUT_PATH}/)
 
 EXEC_PROGRAM(cp 
 ARGS 
-${CMAKE_CURRENT_SOURCE_DIR}/loopC.sh 
+${CMAKE_CURRENT_SOURCE_DIR}/see-* 
 ${EXECUTABLE_OUTPUT_PATH}/)
 
 
