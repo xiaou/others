@@ -7,6 +7,7 @@
 #include <cstdlib> //for exit()
 #include <string.h>
 #include <sys/wait.h> 
+#include <arpa/inet.h>
 
 using namespace std;
 
@@ -14,12 +15,15 @@ void sendTCP_SYN()
 {
 	int sock_fd = socket(PF_INET, SOCK_STREAM, 0);
 	if(sock_fd < 0)
-		return;
+    {
+        cout<<"error by U:socket failed."<<endl;
+        exit(0);
+    }
 	
 	struct sockaddr_in sock_addr;
 	sock_addr.sin_family = AF_INET;
 	sock_addr.sin_port = htons(4333);
-	sock_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	sock_addr.sin_addr.s_addr = inet_addr("192.168.44.1"); //htonl(INADDR_ANY);
 	memset(sock_addr.sin_zero, 0x00, 8);
 
 	if( connect(sock_fd, (struct sockaddr *)&sock_addr, sizeof(struct sockaddr_in)) != 0 )

@@ -1,2 +1,0 @@
-/home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles/client.dir
-/home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles/server.dir
