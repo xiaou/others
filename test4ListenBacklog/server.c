@@ -61,20 +61,20 @@ int main()
 
 	struct sockaddr_in sock_addr;
 	sock_addr.sin_family = AF_INET;
-	sock_addr.sin_port = htons(4330);
+	sock_addr.sin_port = htons(4333);
 	sock_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	memset(sock_addr.sin_zero, 0x00, 8);
 
 	if(bind(sock_fd, (struct sockaddr *)&sock_addr, sizeof(struct sockaddr_in)) != 0)
 	{
 		printf("error by U:bind failed.");
+		close(sock_fd);
 		return -1;
 	}
 
 	int backlog = 0;
 	while(1)
 	{
-        printf(".");
 		int i = getBacklogValue();
 		if(i != backlog)
 		{
@@ -83,10 +83,17 @@ int main()
 		}
 
 		if(listen(sock_fd, backlog) == -1)
+		{
+		    printf("\nerror by U: listen failed.\n");
+		    close(sock_fd);
 			return -1;
-
-		usleep(1000000/2);//0.5 seconds.
+		}
+		
+        //printf(".");
+		usleep(10000);
 	}
 
+    close(sock_fd);
 	return 0;
 }
+

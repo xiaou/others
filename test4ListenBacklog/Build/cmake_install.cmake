@@ -1,4 +1,4 @@
-# Install script for directory: /home/spring/myGits/others/test4ListenBacklog
+# Install script for directory: /home/xiaou/myGits/others/test4ListenBacklog
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -38,7 +38,7 @@ ELSE(CMAKE_INSTALL_COMPONENT)
   SET(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
 ENDIF(CMAKE_INSTALL_COMPONENT)
 
-FILE(WRITE "/home/spring/myGits/others/test4ListenBacklog/Build/${CMAKE_INSTALL_MANIFEST}" "")
+FILE(WRITE "/home/xiaou/myGits/others/test4ListenBacklog/Build/${CMAKE_INSTALL_MANIFEST}" "")
 FOREACH(file ${CMAKE_INSTALL_MANIFEST_FILES})
-  FILE(APPEND "/home/spring/myGits/others/test4ListenBacklog/Build/${CMAKE_INSTALL_MANIFEST}" "${file}\n")
+  FILE(APPEND "/home/xiaou/myGits/others/test4ListenBacklog/Build/${CMAKE_INSTALL_MANIFEST}" "${file}\n")
 ENDFOREACH(file)

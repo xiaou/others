@@ -44,10 +44,10 @@ CMAKE_COMMAND = /usr/bin/cmake
 RM = /usr/bin/cmake -E remove -f
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/spring/myGits/others/test4ListenBacklog
+CMAKE_SOURCE_DIR = /home/xiaou/myGits/others/test4ListenBacklog
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/spring/myGits/others/test4ListenBacklog/Build
+CMAKE_BINARY_DIR = /home/xiaou/myGits/others/test4ListenBacklog/Build
 
 #=============================================================================
 # Target rules for target CMakeFiles/client.dir
@@ -56,7 +56,7 @@ CMAKE_BINARY_DIR = /home/spring/myGits/others/test4ListenBacklog/Build
 CMakeFiles/client.dir/all:
 	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/depend
 	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles  1
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles  1
 	@echo "Built target client"
 .PHONY : CMakeFiles/client.dir/all
 
@@ -66,9 +66,9 @@ all: CMakeFiles/client.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/client.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles 1
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles 1
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/client.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles 0
 .PHONY : CMakeFiles/client.dir/rule
 
 # Convenience name for target.
@@ -91,7 +91,7 @@ clean: CMakeFiles/client.dir/clean
 CMakeFiles/server.dir/all:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/depend
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles  2
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles  2
 	@echo "Built target server"
 .PHONY : CMakeFiles/server.dir/all
 
@@ -101,9 +101,9 @@ all: CMakeFiles/server.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/server.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles 1
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles 1
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/server.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles 0
 .PHONY : CMakeFiles/server.dir/rule
 
 # Convenience name for target.

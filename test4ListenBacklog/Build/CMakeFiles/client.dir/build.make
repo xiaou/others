@@ -32,10 +32,10 @@ CMAKE_COMMAND = /usr/bin/cmake
 RM = /usr/bin/cmake -E remove -f
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/spring/myGits/others/test4ListenBacklog
+CMAKE_SOURCE_DIR = /home/xiaou/myGits/others/test4ListenBacklog
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/spring/myGits/others/test4ListenBacklog/Build
+CMAKE_BINARY_DIR = /home/xiaou/myGits/others/test4ListenBacklog/Build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/client.dir/depend.make
@@ -48,17 +48,17 @@ include CMakeFiles/client.dir/flags.make
 
 CMakeFiles/client.dir/client.c.o: CMakeFiles/client.dir/flags.make
 CMakeFiles/client.dir/client.c.o: ../client.c
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object CMakeFiles/client.dir/client.c.o"
-	g++  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/client.dir/client.c.o   -c /home/spring/myGits/others/test4ListenBacklog/client.c
+	g++  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/client.dir/client.c.o   -c /home/xiaou/myGits/others/test4ListenBacklog/client.c
 
 CMakeFiles/client.dir/client.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/client.dir/client.c.i"
-	g++  $(C_DEFINES) $(C_FLAGS) -E /home/spring/myGits/others/test4ListenBacklog/client.c > CMakeFiles/client.dir/client.c.i
+	g++  $(C_DEFINES) $(C_FLAGS) -E /home/xiaou/myGits/others/test4ListenBacklog/client.c > CMakeFiles/client.dir/client.c.i
 
 CMakeFiles/client.dir/client.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/client.dir/client.c.s"
-	g++  $(C_DEFINES) $(C_FLAGS) -S /home/spring/myGits/others/test4ListenBacklog/client.c -o CMakeFiles/client.dir/client.c.s
+	g++  $(C_DEFINES) $(C_FLAGS) -S /home/xiaou/myGits/others/test4ListenBacklog/client.c -o CMakeFiles/client.dir/client.c.s
 
 CMakeFiles/client.dir/client.c.o.requires:
 .PHONY : CMakeFiles/client.dir/client.c.o.requires
@@ -94,6 +94,6 @@ CMakeFiles/client.dir/clean:
 .PHONY : CMakeFiles/client.dir/clean
 
 CMakeFiles/client.dir/depend:
-	cd /home/spring/myGits/others/test4ListenBacklog/Build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/spring/myGits/others/test4ListenBacklog /home/spring/myGits/others/test4ListenBacklog /home/spring/myGits/others/test4ListenBacklog/Build /home/spring/myGits/others/test4ListenBacklog/Build /home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles/client.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/xiaou/myGits/others/test4ListenBacklog/Build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/xiaou/myGits/others/test4ListenBacklog /home/xiaou/myGits/others/test4ListenBacklog /home/xiaou/myGits/others/test4ListenBacklog/Build /home/xiaou/myGits/others/test4ListenBacklog/Build /home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles/client.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/client.dir/depend
 

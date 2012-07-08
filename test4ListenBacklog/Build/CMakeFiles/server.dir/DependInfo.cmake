@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_C
-  "/home/spring/myGits/others/test4ListenBacklog/server.c" "/home/spring/myGits/others/test4ListenBacklog/Build/CMakeFiles/server.dir/server.c.o"
+  "/home/xiaou/myGits/others/test4ListenBacklog/server.c" "/home/xiaou/myGits/others/test4ListenBacklog/Build/CMakeFiles/server.dir/server.c.o"
   )
 SET(CMAKE_C_COMPILER_ID "GNU")
 
