@@ -19,6 +19,10 @@ pthread.h
 -
 iostream
 -
+cstdlib
+-
 string.h
+-
+sys/wait.h
 -
 

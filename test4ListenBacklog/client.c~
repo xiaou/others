@@ -4,7 +4,9 @@
 #include <unistd.h>	   // for close()
 #include <pthread.h>
 #include <iostream>
+#include <cstdlib> //for exit()
 #include <string.h>
+#include <sys/wait.h> 
 
 using namespace std;
 
@@ -24,7 +26,7 @@ void sendTCP_SYN()
 	{
 	    close(sock_fd);
 		cout<<"error by U:connect failed."<<endl;
-		return;
+		exit(0);
 	}
 }
 
@@ -34,31 +36,55 @@ void send10_TCP_SYN()
     pthread_t ptd;
 	for(int i = 0; i != 10; i++)
 	{
-#if 1
-        sendTCP_SYN();
-#else	
+	#if 1
+	    sendTCP_SYN();
+	#else
 		if(pthread_create(&ptd, NULL, func, NULL) != 0)
 		{
-			cout<<"error by U:pthread_create failed"<<endl;
-			return;
+			//cout<<"error by U:pthread_create failed"<<endl;
+			exit(0);
 		}
-#endif
+	#endif
 	}
 }
 
 
 int main()
 {
-	char c;
-	//while(1)
+	pid_t pid;
+
+    while(1)
+    {
+    
+    cout<<"fork 100"<<endl;
+
+	for(int i = 0; i != 100; i++)
 	{
-        //cout<<"~Enter 's' to send 10 TCP SYN~\n"<<endl;
-		//cin>>c;
-		//if(c == 's' || c == 'S')
-		{
-			//cout<<"~now sending...~\n";
-			send10_TCP_SYN();
-		}
-		usleep(10000);
+	    pid = fork();
+	    if(pid == -1)
+	        return -1;
+	    else if(pid == 0)
+	    {
+	        //cout<<"I'm child."<<endl;
+	        while(1)
+	        {
+		        send10_TCP_SYN();	
+		        usleep(10000);
+	        }
+	        return 0;
+	    }
+	    else 
+	    {
+	        //cout<<"I'm parent."<<endl;
+	    }
+	}
+	
+	cout<<"100 forked."<<endl;
+	
+	while(wait(NULL) != -1);
+	
+	sleep(1);
+	
 	}
 }
+
