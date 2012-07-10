@@ -6,6 +6,10 @@
 #include <stdlib.h>      
 #include <string.h>       
 #include <pthread.h>
+//for keyboard check:
+#include <sys/select.h>
+#include <termios.h>
+#include <ctype.h>
 
 
 #ifndef   MAXPATH 
@@ -53,6 +57,40 @@ int getBacklogValue()
 	return ret;
 }
 
+void checkKeyboard4Quit()
+{
+    int STDIN = 0;
+    struct timeval tv = {0,0};
+    struct termios term , termbak;
+    char   ch;
+    fd_set    fd;
+    
+    FD_ZERO(&fd);
+    FD_SET( STDIN ,&fd);
+
+    tcgetattr(STDIN, &term);
+    termbak = term;
+    term.c_lflag &= ~(ICANON|ECHO);
+    tcsetattr(STDIN, TCSANOW, &term);    
+
+    while(1)
+    {
+        FD_ZERO(&fd);
+        FD_SET( STDIN ,&fd);
+        if(   1 == select( STDIN+1,&fd,NULL,NULL,&tv) 
+             && 1 == read( STDIN , &ch , 1 ) 
+             && ('q' == tolower(ch) || 'Q' == tolower(ch)) 
+          )
+        {
+            break;
+        }
+        fflush(stdout);
+        usleep(100000);
+    }
+
+    tcsetattr(STDIN,TCSANOW,&termbak);
+}
+
 int main()
 {
 	int sock_fd = socket(PF_INET, SOCK_STREAM, 0);
@@ -72,26 +110,18 @@ int main()
 		return -1;
 	}
 
-	int backlog = 0;
-	while(1)
+	int backlog = getBacklogValue();
+    printf("listen(backlog=%d)\n", backlog);    
+	
+    if(listen(sock_fd, backlog) == -1)
 	{
-		int i = getBacklogValue();
-		if(i != backlog)
-		{
-			backlog = i;
-			printf("\nlog by U: backlog = %d\n", backlog);
-		}
-
-		if(listen(sock_fd, backlog) == -1)
-		{
-		    printf("\nerror by U: listen failed.\n");
-		    close(sock_fd);
-			return -1;
-		}
-		
-        //printf(".");
-		usleep(10000);
+		printf("\nerror by U: listen failed.\n");
+		close(sock_fd);
+		return -1;
 	}
+	
+	printf("Input 'q' to quit.\n");
+    checkKeyboard4Quit();
 
     close(sock_fd);
 	return 0;

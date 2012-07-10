@@ -1,2 +1,0 @@
-/usr/local/test4UDP_InstallDir_canDelete/client
-/usr/local/test4UDP_InstallDir_canDelete/server

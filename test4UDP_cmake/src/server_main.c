@@ -13,6 +13,10 @@
 #include <stdlib.h>      
 #include <string.h>       
 #include <pthread.h>
+//for keyboard check:
+#include <sys/select.h>
+#include <termios.h>
+#include <ctype.h>
 
 static int res = 0;
 void runServer(void * sock_fd);
