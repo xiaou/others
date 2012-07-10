@@ -84,8 +84,9 @@ int main()
 	    }
 	}
 	
-	//while(wait(NULL) != -1);
-	while(waitpid(-1, NULL, WNOHANG) > 0)
+	while(wait(NULL) != -1);
+	//while(waitpid(-1, NULL, WNOHANG) > 0);
+	//while(waitpid(-1, NULL, 0) > 0);
 	
 	cout<<"100 exited."<<endl;
 	
