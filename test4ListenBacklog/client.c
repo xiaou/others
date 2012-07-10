@@ -84,9 +84,10 @@ int main()
 	    }
 	}
 	
-	cout<<"100 forked."<<endl;
+	//while(wait(NULL) != -1);
+	while(waitpid(-1, NULL, WNOHANG) > 0)
 	
-	while(wait(NULL) != -1);
+	cout<<"100 exited."<<endl;
 	
 	sleep(1);
 	

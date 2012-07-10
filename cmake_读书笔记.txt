@@ -76,7 +76,8 @@ TARGET_LINK_LIBRARIES( fdclock ${cairo_LIBRARIES} )
 INSTALL( TARGETS fdclock 
          DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
+各宏：
+${PROJECT_NAME}取工程名.
+AUX_SOURCE_DIRECTORY(. SRC_LIST)把目录下所有的源文件添加到SRC_LIST变量。
 
-
-
-
+xxxx
