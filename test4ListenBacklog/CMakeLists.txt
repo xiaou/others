@@ -2,8 +2,16 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(test4TCP)
 
+
 SET(CMAKE_C_COMPILER "g++")
-SET(SRC4Client client.c)
+
+
+SET(UNP_LIB_DIR ${PROJECT_SOURCE_DIR}/../unp_lib)
+INCLUDE_DIRECTORIES(${UNP_LIB_DIR})
+AUX_SOURCE_DIRECTORY(${UNP_LIB_DIR} UNP_SRC_LIST)
+
+
+SET(SRC4Client client.c ${UNP_SRC_LIST})
 SET(SRC4Server server.c)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
