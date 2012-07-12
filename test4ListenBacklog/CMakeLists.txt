@@ -2,28 +2,27 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(test4TCP)
 
-
 SET(CMAKE_C_COMPILER "g++")
 
-
-SET(UNP_LIB_DIR ${PROJECT_SOURCE_DIR}/../unp_lib)
-INCLUDE_DIRECTORIES(${UNP_LIB_DIR})
-AUX_SOURCE_DIRECTORY(${UNP_LIB_DIR} UNP_SRC_LIST)
-
-
-SET(SRC4Client client.c ${UNP_SRC_LIST})
+SET(SRC4Client client.c)
 SET(SRC4Server server.c)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
+# target add unp lib
+
+SET(UNP_LIB_DIR ${PROJECT_SOURCE_DIR}/../unp_lib)
+INCLUDE_DIRECTORIES(${UNP_LIB_DIR})
+LINK_DIRECTORIES(${UNP_LIB_DIR})
 
 # target
 
 ADD_EXECUTABLE(client ${SRC4Client})
-ADD_EXECUTABLE(server ${SRC4Server})
 TARGET_LINK_LIBRARIES(client pthread)
+TARGET_LINK_LIBRARIES(client unp)
 
+ADD_EXECUTABLE(server ${SRC4Server})
 
-# cp server_config.txt
+# cp some file
 
 IF(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/server_config.txt)
 MESSAGE(FATAL_ERROR "where is my server_config.txt in ${CMAKE_CURRENT_SOURCE_DIR}?")
