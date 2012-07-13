@@ -1,14 +1,30 @@
 #include "unp.h"
 
 void
-sig_chld(int signo)
-{
+sig_chld_(int signo)
+{printf(".\n");
 	pid_t	pid;
 	int		stat;
 
 	while ( (pid = waitpid(-1, &stat, WNOHANG)) > 0)
-		printf("child %d terminated\n", pid);
+		printf("child %d terminated!\n", pid);
 	return;
+}
+
+void
+str_echo_(int sockfd)
+{printf(".\n");
+	ssize_t		n;
+	char		buf[MAXLINE];
+
+again:
+	while ( (n = read(sockfd, buf, MAXLINE)) > 0)
+		Writen(sockfd, buf, n);
+
+	if (n < 0 && errno == EINTR)
+		goto again;
+	else if (n < 0)
+		err_sys("str_echo: read error");
 }
 
 int main()
@@ -35,7 +51,7 @@ int main()
 	if(listen(listenfd, 10) == -1)
 		return -1;
 	
-	Signal(SIGCHLD, sig_chld);
+	Signal(SIGCHLD, sig_chld_);
 
 	while(1)
 	{
@@ -58,7 +74,7 @@ int main()
 				printf("close error!\n");
 				exit(0);
 			}
-			str_echo(connfd);
+			str_echo_(connfd);
 			exit(0);
 		}
 		
