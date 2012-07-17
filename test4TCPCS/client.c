@@ -2,27 +2,50 @@
 
 void
 str_cli_(FILE *fp, int sockfd)
-{printf(".\n");
-	char	sendline[MAXLINE], recvline[MAXLINE];
-
-	while (Fgets(sendline, MAXLINE, fp) != NULL) {
-
-		Writen(sockfd, sendline, 2);
-		sleep(1);
-		Writen(sockfd, sendline+1, strlen(sendline)-1);
-
-		//if (Readline(sockfd, recvline, MAXLINE) == 0)
-		//	err_quit("str_cli: server terminated prematurely");
-
-		//Fputs(recvline, stdout);
-	}
-}
-
-void
-sig_pipe_(int signo)
 {
-	printf("SIGPIPE received\n");
-	return;
+	int n;
+	bool isEOF(0);
+	char buf[1024];
+	int filefd = fileno(fp);
+	int maxfdp1 = max(filefd, sockfd) + 1;
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	while(1)
+	{
+		if(!isEOF)
+			FD_SET(filefd, &readfds);
+		FD_SET(sockfd, &readfds);
+		
+		if(select(maxfdp1, &readfds, NULL, NULL, NULL) == -1)
+			err_quit("select return error!\n");
+		
+		///select returned
+		//
+		if(FD_ISSET(filefd, &readfds))
+		{
+			if( (n = Read(fileno(fp), buf, 1024)) == 0 )
+			{
+				isEOF = true;
+				Shutdown(sockfd, SHUT_WR);
+				FD_CLR(sockfd, &readfds);
+			}
+			else
+				Writen(sockfd, buf, n);
+		}
+		
+		if(FD_ISSET(sockfd, &readfds))
+		{
+			if( (n = Read(sockfd, buf, 1024)) == 0)
+			{
+				if(!isEOF)
+					err_quit("str_cli_:server terminated prematurely.\n");
+				else //read ended.
+					return;
+			}
+			else
+				Writen(fileno(stdout), buf, n); 
+		}
+	}
 }
 
 int main()
@@ -44,10 +67,8 @@ int main()
 		return -1;
 	}
 	
-	Signal(SIGPIPE, sig_pipe_);
-	
 	str_cli_(stdin, sockfd);
-
+	
 	return 0;
 }
 

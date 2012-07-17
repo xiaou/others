@@ -47,7 +47,7 @@ int main()
 
 	memset(&servaddr, 0x00, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_port = htons(SERV_PORT+4);
+	servaddr.sin_port = htons(SERV_PORT);
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	
 	if(bind(listenfd, (struct sockaddr*)&servaddr, sizeof servaddr) == -1)
