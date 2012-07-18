@@ -39,84 +39,95 @@ int main()
 	
 	///select 
 	//
-	fd_set allfds;
-	fd_set rfds;
-	FD_ZERO(&allfds);
-	FD_SET(listenfd, &allfds);
-	int maxfd = listenfd;
-	int nready = 0;
-	
-	const int clientsLen = FD_SETSIZE - 1;
-	int clients[clientsLen];
-	int maxi = -1;//index of clients's max validate fd.
-	for(int i = 0; i != clientsLen; i++)
-		clients[i] = -1;
-	
+	int fdsLen;
+	if((fdsLen = sysconf(_SC_OPEN_MAX)) == -1)
+		fdsLen = 1024; 
+	printf("fdsLen = %d\n", fdsLen);
+
+	struct pollfd fds[fdsLen];
+	for(int i = 1; i < fdsLen; i++)
+	{
+		fds[i].fd = -1;
+		fds[i].events = POLLIN;
+	}
+	fds[0].fd = listenfd;
+	fds[0].events = POLLIN;
+
+	int maxi = 0;//index of clients's max validate fd.	
+
 	int sockfd;
 	struct sockaddr addr;
 	socklen_t childlen;
 	
+	int nready = 0;	
 	ssize_t n; //read() retval.
 	char buf[MAXLINE];
 //alarm(2);	
 	while(1)
 	{
-		rfds = allfds;
-		nready = Select(maxfd + 1, &rfds, NULL, NULL, NULL);
-
-		if(FD_ISSET(listenfd, &rfds))
+		nready = Poll(fds, fdsLen, -1);
+		
+		if(fds[0].revents & POLLIN)
 		{
 			childlen = sizeof addr;
 			sockfd = Accept(listenfd, &addr, &childlen);
-			int i = 0;
-			for(; i != clientsLen; i++)
+			int i;
+			for(i = 1; i < fdsLen; i++)
 			{
-				if(clients[i] < 0)
+				if(fds[i].fd < 0)
 				{
-					clients[i] = sockfd;
+					fds[i].fd = sockfd;
+					fds[i].events = POLLIN;
+					fds[i].revents = 0;
 					if(i > maxi)
 						maxi = i;
-					FD_SET(clients[i], &allfds);
-					if(clients[i] > maxfd)
-						maxfd = clients[i];
 					break;
 				}
 			}
-			
-			if(i == clientsLen)
+			if(i >= fdsLen)
 			{
 				printf("clients so many!\n");
 				close(sockfd);
 			}
-			
 			if(--nready <= 0)
 				continue;
 		}
-		
-		for(int i = 0; i <= maxi; i++)
+
+		for(int i = 1; i <= maxi; i++)
 		{
-			if(clients[i] < 0) 
+			if(fds[i].fd < 0)
 				continue;
-			if(FD_ISSET(clients[i], &rfds))
+			if(fds[i].revents & (POLLIN|POLLERR))
 			{
-				if((n = Read(clients[i], buf, MAXLINE)) == 0)
-				{//connect closed by client
-					Close(clients[i]);
-					FD_CLR(clients[i], &allfds);
-					clients[i] = -1;
-					
+				if((n = read(fds[i].fd, buf, MAXLINE)) < 0)
+				{
+					if(errno == ECONNRESET)
+					{
+						printf("error == ECONNRESET!\n");
+						Close(fds[i].fd);
+						fds[i].fd = -1;
+					}
+					else
+						err_sys("read error!\n");
 				}
-				else
-					Writen(clients[i], buf, n);
-					
+				else if(n == 0)
+				{
+					printf("a connection closed by the client.\n");
+					Close(fds[i].fd);
+					fds[i].fd = -1;
+				}
+				else 
+					Writen(fds[i].fd, buf, n);
+
 				if(--nready <= 0)
-					break;
+					continue;
 			}
 		}
-		
+
 	}//_while(1)_
 	
 	
+	//
 	close(listenfd);
 	return 0;
 }

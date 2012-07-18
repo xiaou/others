@@ -5,7 +5,7 @@ project(test4TCPCS)
 SET(CMAKE_C_COMPILER "g++")
 
 SET(SRC4Client client.c)
-SET(SRC4Server server2.c)
+SET(SRC4Server server3.c)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 # target add unp lib

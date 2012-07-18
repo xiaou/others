@@ -10,6 +10,9 @@ str_cli_(FILE *fp, int sockfd)
 	int maxfdp1 = max(filefd, sockfd) + 1;
 	fd_set readfds;
 	FD_ZERO(&readfds);
+#if 1
+//alarm(2); // pselect函数can用最后一个参数来防止被信号中断比如这儿的两秒一个SIGALRM.
+#endif
 	while(1)
 	{
 		if(!isEOF)
