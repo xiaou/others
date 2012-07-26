@@ -84,5 +84,8 @@ CMAKE_SOURCE_DIR
 PROJECT_SOURCE_DIR
 这两个变量指代的内容是一致的,不论采用何种编译方式,都是工程顶层目录。
 
+ADD_DEFINITIONS( -DMACRO1 –DMACRO2 … )：
+添加-D预编译宏定义，可以一次添加多个。
+
 
 xxxx
