@@ -80,6 +80,8 @@ INSTALL( TARGETS fdclock
 ${PROJECT_NAME}取工程名.
 AUX_SOURCE_DIRECTORY(. SRC_LIST)把目录下所有的源文件添加到SRC_LIST变量。
 
+TARGET_LINK_LIBRARIES(log4cplus)这样是添加动态库(可缩写)，添加静态库必须写全称libxxx.a酱紫.)
+
 CMAKE_SOURCE_DIR
 PROJECT_SOURCE_DIR
 这两个变量指代的内容是一致的,不论采用何种编译方式,都是工程顶层目录。

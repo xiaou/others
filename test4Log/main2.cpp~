@@ -1,0 +1,26 @@
+/*    iostream模式，appender输出到屏幕。*/
+#include <log4cplus/logger.h>
+#include <log4cplus/consoleappender.h>
+#include <log4cplus/loggingmacros.h>
+#include <iostream>
+#include <iomanip> 
+/* 其实这个东东还是放到log4cplus头文件中比较合适些，个人意见：） */
+using namespace log4cplus;
+int main()
+{
+    /* step 1: Instantiate an appender object */
+ SharedAppenderPtr _append(new ConsoleAppender()); 
+   _append->setName("append test");
+    /* step 4: Instantiate a logger object */
+    Logger _logger = Logger::getInstance("test");
+    /* step 5: Attach the appender object to the logger  */ 
+ _logger.addAppender(_append);
+    /* log activity */
+   LOG4CPLUS_TRACE(_logger, "This is"  << " just a t" << "est." << std::endl)
+   LOG4CPLUS_DEBUG(_logger, "This is a bool: " << true) 
+   LOG4CPLUS_INFO(_logger, "This is a char: " << 'x')
+    LOG4CPLUS_WARN(_logger, "This is a int: " << 1000)
+    LOG4CPLUS_ERROR(_logger, "This is a long(hex): " << std::hex << 100000000) 
+ LOG4CPLUS_FATAL(_logger, "This is a double: "  << std::setprecision(15)  << 1.2345234234)
+    return 0;
+}
