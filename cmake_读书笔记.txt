@@ -66,17 +66,21 @@ FIND_PACKAGE( PkgConfig )
 PKG_CHECK_MODULES( cairo REQUIRED cairo )
 INCLUDE_DIRECTORIES( ${cairo_INCLUDE_DIRS} )
 LINK_DIRECTORIES( ${cairo_LIBRARY_DIRS} )
-SET( fdclock_SRCS fdclock.c
-                  fdface.c
-				                    fdhand.c
-									                  fdlogo.c
-													                    findargb.c )
+SET(fdclock_SRCS fdclock.c fdface.c)
+
 ADD_EXECUTABLE( fdclock ${fdclock_SRCS} )
 TARGET_LINK_LIBRARIES( fdclock ${cairo_LIBRARIES} )
 INSTALL( TARGETS fdclock 
          DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
+执行shell命令：     
+EXEC_PROGRAM(cp 
+ARGS 
+${CMAKE_CURRENT_SOURCE_DIR}/see-* 
+${EXECUTABLE_OUTPUT_PATH}/)
+
 各宏：
+${CMAKE_CURRENT_SOURCE_DIR}当前CMakeLists.txt所在目录.
 ${PROJECT_NAME}取工程名.
 AUX_SOURCE_DIRECTORY(. SRC_LIST)把目录下所有的源文件添加到SRC_LIST变量。
 

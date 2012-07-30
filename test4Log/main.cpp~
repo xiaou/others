@@ -3,7 +3,7 @@
 
 int main()
 {
-	LOG_GLOBAL_INIT(1, 0, LOG_LEVEL_DEBUG);
+	LOG_GLOBAL_INIT(1, 0, LOG_LEVEL_OFF);
 
 	LOG_FATAL("TESt  fatal!");
 	LOG_ERROR("TEst error!");
