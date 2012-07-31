@@ -1,7 +1,8 @@
 CMakeLists.txt
 -----------------------------------------
-# Project name
+cmake_minimum_required(VERSION 2.8)
 PROJECT(HELLO)
+SET(CMAKE_C_COMPILER "g++")
 
 # 定义变量
 SET(HELLO_SOURCE_DIR ./src/)
@@ -24,7 +25,8 @@ ADD_EXECUTABLE(helloDemo demo.c) #自指定的list中产生执行档
 
 # Link the executable to the Hello library.
 TARGET_LINK_LIBRARIES(helloDemo Hello)
-----------------------------------------------
+---------------------------------------------------------------
+---------------------------------------------------------------
 CMake的scripting language
 
 以分號或空格區隔
@@ -80,18 +82,41 @@ ${CMAKE_CURRENT_SOURCE_DIR}/see-*
 ${EXECUTABLE_OUTPUT_PATH}/)
 
 各宏：
+
+各个目录：
 ${CMAKE_CURRENT_SOURCE_DIR}当前CMakeLists.txt所在目录.
-${PROJECT_NAME}取工程名.
+${PROJECT_SOURCE_DIR}本项目所在目录(即工程顶层目录).
+${CMAKE_SOURCE_DIR}同上。
+${PROJECT_BINARY_DIR}本项目的编译目录.
+SET(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)设定lib（产品）输出目录.
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})设定程序(产品)输出目录.
+
 AUX_SOURCE_DIRECTORY(. SRC_LIST)把目录下所有的源文件添加到SRC_LIST变量。
+${PROJECT_NAME}取本工程名.
 
-TARGET_LINK_LIBRARIES(log4cplus)这样是添加动态库(可缩写)，添加静态库必须写全称libxxx.a酱紫.)
+ADD_SUBDIRECTORY(LOG)
 
-CMAKE_SOURCE_DIR
-PROJECT_SOURCE_DIR
-这两个变量指代的内容是一致的,不论采用何种编译方式,都是工程顶层目录。
+包含搜索路径：
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../include /usr/local/ssl/include)
+LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../lib  /usr/local/ssl/lib)
 
-ADD_DEFINITIONS( -DMACRO1 –DMACRO2 … )：
-添加-D预编译宏定义，可以一次添加多个。
+添加target（输出的东西）:
+ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_LIST})制定一个exec产品（一个名为工程名的target）
+ADD_LIBRARY(LOG SHARED/*可选*/ ${SRC})指定一个lib产品（一个名为LOG的target）.
+同时生成静态库和动态库（同名）：
+ADD_LIBRARY(${LIB_NAME} SHARED ${SRC_LIST})
+ADD_LIBRARY(${LIB_NAME}_STAIC ${SRC_LIST})  #曲线救国啊.
+SET_TARGET_PROPERTIES(${LIB_NAME}_STAIC PROPERTIES OUTPUT_NAME ${LIB_NAME})
+
+链接库：
+TARGET_LINK_LIBRARIES(LOG pthread log4cplus rt _common)缩写是添加动态库，添加静态库必须写全称liblog4cplus.a酱紫.)
+
+添加预编译宏：
+ADD_DEFINITIONS( -DMACRO1 –DMACRO2 … ) -D后跟宏.
+
+target A的依赖target B：
+ADD_DEPENDENCIES(target-name depend-target1 depend-target2)
+
 
 
 xxxx

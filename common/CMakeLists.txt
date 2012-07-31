@@ -1,23 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
 
-project(_common)
-
-SET(CMAKE_C_COMPILER "g++")
-SET(SRC_LIST 4file.c)
-
-
-#
-ADD_LIBRARY(${PROJECT_NAME} SHARED ${SRC_LIST})
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
-EXEC_PROGRAM(cp 
-ARGS
-${PROJECT_SOURCE_DIR}/4file.h
-${PROJECT_SOURCE_DIR}/include)
-
-
-#
-ADD_SUBDIRECTORY(LOG) #日志库
+ADD_SUBDIRECTORY(src) 
 
 
 

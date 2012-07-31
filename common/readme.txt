@@ -1,3 +1,7 @@
-@brief 一些公用工具.
-@by xiaoU.
-@version 1.1.
+/**
+ * @brief 一些公用工具.
+ * @by xiaoU.
+ * @version 1.2.
+ * @par 修改记录:
+ * 	-1.2:整理目录.
+ */
