@@ -30,6 +30,8 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 
 int main()
 {
+LOG_DEBUG("RUN SERVER!");
+
   struct MHD_Daemon *daemon;
 
   daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, PORT, NULL, NULL,

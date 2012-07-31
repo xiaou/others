@@ -8,11 +8,11 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../common/include /usr/local/inc
 LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../common/lib /usr/local/lib)
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_LIST})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} LOG 
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}  
+ LOG
+ libmicrohttpd.a gnutls gcrypt pthread dl rt 
+)
 
-libnettle.a libp11-kit.so libgmp.a libgnutls.a gcrypt gpg-error 
-
-pthread gmp nettle p11-kit gnutls libmicrohttpd.a)
 
 
 
