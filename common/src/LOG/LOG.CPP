@@ -21,9 +21,8 @@ static bool ONLY_A_LOGGER_BOOL = false;/**< 是否所有的日志只用一个log
 #define MAX_LOGGER_FILENUMBER		3/**< 一个logger的最大文件数量（这是对文件日志而言的）. */
 #define MAX_LOGGER_A_FILE_SIZE		(200*1024) /**< 一个日志文件的最大值（这是对文件日志而言的). */
 
-#define _FORMAT_A_LOG_OUTPUT_SeeSrcFile_False			"[%d{%y/%m/%d %H:%M:%S.%q} %p] %m%n"
-#define _FORMAT_A_LOG_OUTPUT_SeeSrcFile_True			"[%d{%y/%m/%d %H:%M:%S.%q} %p] %m[%F:%L]%n"
-#define FORMAT_A_LOG_OUTPUT								_FORMAT_A_LOG_OUTPUT_SeeSrcFile_False
+#define FORMAT_A_LOG_OUTPUT_SeeSrcFile_False			"[%d{%y/%m/%d %H:%M:%S.%q} %p] %m%n"
+#define FORMAT_A_LOG_OUTPUT_SeeSrcFile_True			"[%d{%y/%m/%d %H:%M:%S.%q} %p] %m[%F:%L]%n"
 
 
 
@@ -36,6 +35,7 @@ Logger g_logger;
 Logger g_loggerFile_FATAL;
 Logger g_loggerFile_ERROR;
 Logger g_loggerFile_WARN;
+Logger g_loggerFile_INFO;
 Logger g_loggerFile_DEBUG;
 
 #define IMP_g_pMutex_LOCK  \
@@ -105,7 +105,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 			sprintf(buf, "%s", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
-			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT));
+			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_False));
 			append->setLayout(layout);
 			g_logger = Logger::getInstance(buf);
 			g_logger.addAppender(append);
@@ -117,7 +117,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 			sprintf(buf, "%s.fatal", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
-			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT));
+			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_True));
 			append->setLayout(layout);
 			g_loggerFile_FATAL = Logger::getInstance(buf);
 			g_loggerFile_FATAL.addAppender(append);
@@ -127,7 +127,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 			sprintf(buf, "%s.error", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
-			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT));
+			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_True));
 			append->setLayout(layout);
 			g_loggerFile_ERROR = Logger::getInstance(buf);
 			g_loggerFile_ERROR.addAppender(append);
@@ -137,17 +137,27 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 			sprintf(buf, "%s.warn", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
-			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT));
+			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_True));
 			append->setLayout(layout);
 			g_loggerFile_WARN = Logger::getInstance(buf);
 			g_loggerFile_WARN.addAppender(append);
 			g_loggerFile_WARN.setLogLevel(level);
 			
 			//
+			sprintf(buf, "%s.info", fileName);
+			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
+			append->setName(buf);
+			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_True));
+			append->setLayout(layout);
+			g_loggerFile_INFO = Logger::getInstance(buf);
+			g_loggerFile_INFO.addAppender(append);
+			g_loggerFile_INFO.setLogLevel(level);
+			
+			//
 			sprintf(buf, "%s.debug", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
-			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT));
+			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_False));
 			append->setLayout(layout);
 			g_loggerFile_DEBUG = Logger::getInstance(buf);
 			g_loggerFile_DEBUG.addAppender(append);
@@ -160,7 +170,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 		
 		append = (new ConsoleAppender());
 		append->setName("console");
-		layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT));
+		layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_False));
 		append->setLayout(layout);
 		g_logger = Logger::getInstance("console");
 		g_logger.addAppender(append);
