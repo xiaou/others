@@ -3,7 +3,8 @@
 
 
 #include "log4cplus/loglevel.h"
-
+#include <string.h>
+#include <limits.h>
 
 ///
 typedef int LOGLEVEL;
@@ -32,6 +33,39 @@ void LOG_WARN(const char * format, ...);
 void LOG_DEBUG(const char * format, ...);
 
 
-
+///当前工作目录切换到exe所在目录.出栈后回到原目录.
+class CDEXEDIR
+{
+	public:
+	CDEXEDIR()
+	{
+		char   exePath[PATH_MAX]; 
+		getcwd(currWorkPath, PATH_MAX);
+		getSelfEXEPath(exePath, PATH_MAX);
+		chdir(exePath);
+	}
+	~CDEXEDIR()
+	{
+		chdir(currWorkPath);
+	}
+	private:
+	char currWorkPath[PATH_MAX];
+	
+	ssize_t getSelfEXEPath(char * buf, size_t bufsiz)
+	{
+   		ssize_t ret = readlink("/proc/self/exe", buf, bufsiz);
+    	if(ret != -1)
+    	{
+        	for(int i = strlen(buf); i != 0; i--)   
+        	    if(buf[i-1] == '/')
+        	    {
+        	        buf[i-1] = 0;
+        	        break;
+        	    }
+    	}
+    	return ret;
+    }
+};
 
 #endif
+
