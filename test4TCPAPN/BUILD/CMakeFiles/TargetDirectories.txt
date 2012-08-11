@@ -1,0 +1,2 @@
+/home/spring/myGits/others/test4TCPAPN/BUILD/CMakeFiles/client.dir
+/home/spring/myGits/others/test4TCPAPN/BUILD/CMakeFiles/server.dir
