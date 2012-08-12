@@ -46,7 +46,7 @@ int main()
 	{
 		if(errno != EINPROGRESS)
 		{		
-			cout<<"connect failed."<<endl;
+			cout<<"connect error."<<endl;
 			return -1;
 		}
 	}
