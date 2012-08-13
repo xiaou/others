@@ -1,1 +1,0 @@
-g++      CMakeFiles/client.dir/client.c.o  -o ../client -rdynamic -L/home/spring/myGits/others/test4TCPAPN/../common/lib -lpthread -lLOG -Wl,-rpath,/home/spring/myGits/others/test4TCPAPN/../common/lib 

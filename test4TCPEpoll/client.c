@@ -85,11 +85,12 @@ int main()
 						if(optval == 0) //connect success.
 						{
 							//char buf[1024*32];
-							char buf[1024*100];
+							char buf[1020];
 							memset(buf, '4', sizeof buf);
 							do{			
 								cout<< "send len:";
 								cout<< send(connfd, buf, sizeof buf, 0)<<endl;
+								return 0;
 							}while(usleep(1000 * 1000) == 0);
 							continue;
 						}

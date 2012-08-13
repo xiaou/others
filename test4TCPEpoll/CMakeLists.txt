@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 PROJECT(tcpepoll)
 SET(CMAKE_C_COMPILER "g++")
 
-SET(SRC_CLIENT client.c)
-SET(SRC_SERVER server.c)
+SET(SRC_CLIENT client.c CEP.cpp)
+SET(SRC_SERVER server.c CEP.cpp)
 SET(LIB_LIST   pthread LOG)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
