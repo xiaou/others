@@ -3,6 +3,7 @@ CMakeLists.txt
 cmake_minimum_required(VERSION 2.8)
 PROJECT(HELLO)
 SET(CMAKE_C_COMPILER "g++")
+SET(CMAKE_C_FLAGS "-g")
 
 # 定义变量
 SET(HELLO_SOURCE_DIR ./src/)
