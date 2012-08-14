@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <algorithm>
+#include <stdio.h>
 
 
 CEP::CEP()
@@ -17,7 +18,7 @@ CEP::CEP()
 		std::cerr<<"faild in CEP().error["<<errno<<"]:"<<strerror(errno)<<std::endl; 
 }
 
-bool CEP::checkEventSocket(CEP_Event & cep_ev)
+bool CEP::checkEventSocket(CEPEvent & cep_ev)
 {
 	int optval;
 	socklen_t optlen = sizeof optval;
@@ -37,20 +38,20 @@ bool CEP::checkEventSocket(CEP_Event & cep_ev)
 		return setNonBlocking(cep_ev.fd);
 }
 
-bool CEP::setEvent4epoll_event(CEP_Event & cep_ev, int epoll_ctl_op)
+bool CEP::setEvent4epoll_event(CEPEvent & cep_ev, int epoll_ctl_op)
 {
 	struct epoll_event ep_ev;
 	ep_ev.data.ptr = &cep_ev;
 	switch(cep_ev.type)
 	{
-		case CEP_Event::Type_Connect:
+		case CEPEvent::Type_Connect:
 			ep_ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
 			break;
-		case CEP_Event::Type_Send:
+		case CEPEvent::Type_Send:
 			ep_ev.events = EPOLLOUT | EPOLLET;
 			break;
-		case CEP_Event::Type_Listen:
-		case CEP_Event::Type_Recv:
+		case CEPEvent::Type_Listen:
+		case CEPEvent::Type_Recv:
 			ep_ev.events = EPOLLIN | EPOLLET;
 			break;
 		default:
@@ -60,23 +61,27 @@ bool CEP::setEvent4epoll_event(CEP_Event & cep_ev, int epoll_ctl_op)
 	return (epoll_ctl(m_epfd, epoll_ctl_op, cep_ev.fd, &ep_ev) == 0);		
 }
 
-bool CEP::addEvent(CEP_Event & cep_ev)
+bool CEP::addEvent(CEPEvent & cep_ev)
 {
 	if(!checkEventSocket(cep_ev)) 
 		return false;
-		
-	if(setEvent4epoll_event(cep_ev, EPOLL_CTL_ADD) == false)
-		return false;
-		
+
 	cep_ev.last_active = time(NULL); 
 	cep_ev.canRemoveFromArray = false;
-	
-	m_events.push_back(cep_ev);
+
+	CEPEvent * p_cep_ev = new CEPEvent(cep_ev);
+	m_events.push_back(CSharedCEPEventPtr(p_cep_ev));
+
+	if(setEvent4epoll_event(*p_cep_ev, EPOLL_CTL_ADD) == false)
+	{
+		m_events.pop_back();
+		return false;
+	} 
 	
 	return true;
 }
 
-bool CEP::modEvent(CEP_Event & cep_ev)
+bool CEP::modEvent(CEPEvent & cep_ev)
 {
 	if(!checkEventSocket(cep_ev)) 
 		return false;
@@ -97,28 +102,20 @@ bool CEP::delEvent(size_t index)
 {
 	if(index >= m_events.size())
 		return false;
-	std::vector<CEP_Event>::iterator it = m_events.begin() + index;
-	bool res = epoll_ctl(m_epfd, EPOLL_CTL_DEL, it->fd, NULL);
+	std::vector<CSharedCEPEventPtr>::iterator it = m_events.begin() + index;
+	bool res = epoll_ctl(m_epfd, EPOLL_CTL_DEL, (*it)->fd, NULL);
 	m_events.erase(it);
 	return res;
 }
 
-bool CEP::delEvent(CEP_Event & cep_ev) 
+bool CEP::delEvent(CEPEvent & cep_ev) 
 {
-#if 0
-	std::vector<CEP_Event>::iterator it = find(m_events.begin(), m_events.end(), cep_ev);
-	if(it != m_events.end())//find.
-	{
-		bool res = epoll_ctl(m_epfd, EPOLL_CTL_DEL, cep_ev.fd, NULL);
-		m_events.erase(it);
-		return res;
-	}
-	return false;
-#endif
 	bool res = epoll_ctl(m_epfd, EPOLL_CTL_DEL, cep_ev.fd, NULL);
 	cep_ev.canRemoveFromArray = true;
 	return res;
 }
+
+static void free_ep_evs_buf(struct epoll_event * ep_evs_buf){ free(ep_evs_buf); }
 
 int CEP::runloop_epoll_wait()
 {
@@ -132,6 +129,7 @@ int CEP::runloop_epoll_wait()
 		std::cerr<<"malloc faild.error["<<errno<<"]:"<<strerror(errno)<<std::endl;
 		return -1;
 	}
+	std::tr1::shared_ptr<struct epoll_event> autoptr_ep_evs_buf(ep_evs_buf, free_ep_evs_buf);
 	
 	m_checkPos = 0;
 	
@@ -145,12 +143,12 @@ int CEP::runloop_epoll_wait()
 		if(currEventsNum > n_ep_evs_buf)
 		{
 			n_ep_evs_buf = currEventsNum + 128;
-			free(ep_evs_buf);
 			if((ep_evs_buf = (struct epoll_event *)malloc(n_ep_evs_buf * sizeof(struct epoll_event))) == NULL)
 			{
 				std::cerr<<"malloc() faild.error["<<errno<<"]:"<<strerror(errno)<<std::endl;
 				return -1;
 			}
+			autoptr_ep_evs_buf.reset(ep_evs_buf);
 		}
 	
 		int nReady = epoll_wait(m_epfd, ep_evs_buf, currEventsNum, 2000);
@@ -162,11 +160,12 @@ int CEP::runloop_epoll_wait()
 			return -1;
 		}
 		
-		CEP_Event * p_cep_ev;
+		CEPEvent * p_cep_ev;
 		bool quit_epoll_wait(0);
 		for(int i = 0; i != nReady; i++, quit_epoll_wait = false)
 		{
-			p_cep_ev = (CEP_Event *)ep_evs_buf[i].data.ptr;
+			p_cep_ev = (CEPEvent *)ep_evs_buf[i].data.ptr;
+			p_cep_ev->last_active = time(NULL);
 			handleEvent(*p_cep_ev, ep_evs_buf[i].events, &quit_epoll_wait);
 			if(quit_epoll_wait)
 				return 0;
@@ -186,24 +185,26 @@ void CEP::checkTimeAndRemove()
 		if(m_checkPos >= m_events.size()) 
 			m_checkPos = 0; // recycle  
 			
-		if(m_events[m_checkPos].canRemoveFromArray)
+		if(m_events[m_checkPos]->canRemoveFromArray)
 		{
-			std::vector<CEP_Event>::iterator it = m_events.begin() + m_checkPos;
+			std::vector<CSharedCEPEventPtr>::iterator it = m_events.begin() + m_checkPos;
 			m_events.erase(it);
 			//数组大小改变了.
 			m_checkPos -= 1;
 			continue;
 		}
 			  	
-		if(m_events[m_checkPos].type != CEP_Event::Type_Listen)// doesn't check listen fd  
+		int fd;
+		if(m_events[m_checkPos]->type != CEPEvent::Type_Listen)// doesn't check listen fd  
 		{
-			long duration = now - m_events[m_checkPos].last_active;  
-			if(duration > 60) // 60s timeout  
+			long duration = now - m_events[m_checkPos]->last_active;  
+			if(duration > MAXCONNTIMEOUT) //timeout  
 			{  
-				std::cout<<"fd("<<m_events[m_checkPos].fd<<")timeout("
-				<<m_events[m_checkPos].last_active<<"--"<<now<<")."<<std::endl;  
+				std::cout<<"fd("<<m_events[m_checkPos]->fd<<")timeout("
+				<<m_events[m_checkPos]->last_active<<"--"<<now<<")."<<std::endl;  
+				fd = m_events[m_checkPos]->fd;
 				delEvent(m_checkPos);
-				close(m_events[m_checkPos].fd);  
+				close(fd);  
 				//数组大小改变了.
 				m_checkPos -= 1;
 			}
@@ -211,30 +212,30 @@ void CEP::checkTimeAndRemove()
 	}  
 }
 
-void CEP::handleEvent(CEP_Event & cep_ev, uint32_t epoll_event_events, bool * quit_epoll_wait)
+void CEP::handleEvent(CEPEvent & cep_ev, uint32_t epoll_event_events, bool * quit_epoll_wait)
 {
 	switch(cep_ev.type)
 	{
-		case CEP_Event::Type_Connect:
+		case CEPEvent::Type_Connect:
 			if(epoll_event_events & EPOLLOUT)
 				handleEvent4TypeConnect(cep_ev, quit_epoll_wait);
 			break;
-		case CEP_Event::Type_Listen:
+		case CEPEvent::Type_Listen:
 			if(epoll_event_events & EPOLLIN)
 				handleEvent4TypeListen(cep_ev, quit_epoll_wait);
 			break;
-		case CEP_Event::Type_Send:
+		case CEPEvent::Type_Send:
 			if(epoll_event_events & EPOLLOUT)
 				handleEvent4TypeSend(cep_ev, quit_epoll_wait);
 			break;
-		case CEP_Event::Type_Recv:
+		case CEPEvent::Type_Recv:
 			if(epoll_event_events & EPOLLIN)
 				handleEvent4TypeRecv(cep_ev, quit_epoll_wait);
 			break;
 	}
 }
 
-void CEP::handleEvent4TypeConnect(CEP_Event & cep_ev, bool * quit_epoll_wait)
+void CEP::handleEvent4TypeConnect(CEPEvent & cep_ev, bool * quit_epoll_wait)
 {
 	int optval;
 	socklen_t optlen = sizeof optval;
@@ -243,20 +244,21 @@ void CEP::handleEvent4TypeConnect(CEP_Event & cep_ev, bool * quit_epoll_wait)
 	cep_ev.canRemoveFromArray = true;
 	
 	if(cep_ev.callback != NULL)
-			cep_ev.callback(cep_ev, *this, connectSuccess, quit_epoll_wait);
+		cep_ev.callback(cep_ev, *this, connectSuccess, quit_epoll_wait);
 }
 
-void CEP::handleEvent4TypeListen(CEP_Event & cep_ev, bool * quit_epoll_wait)
+void CEP::handleEvent4TypeListen(CEPEvent & cep_ev, bool * quit_epoll_wait)
 {
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
 	int clientfd;
 	bool hasError(0);
+
 	if((clientfd = accept(cep_ev.fd, (struct sockaddr*)&addr, &addrlen)) == -1)
 	{
 		if(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 		{
-			std::cerr<<"accept() failed.error["<<errno<<"]:"<<strerror(errno)<<std::endl;
+			std::cerr<<"accept() failed by listen fd:"<<cep_ev.fd<<".error["<<errno<<"]:"<<strerror(errno)<<std::endl;
 			hasError = true;
 		}
 	}	
@@ -265,20 +267,22 @@ void CEP::handleEvent4TypeListen(CEP_Event & cep_ev, bool * quit_epoll_wait)
 		cep_ev.callback(cep_ev, *this, !hasError, quit_epoll_wait);
 }
 
-void CEP::handleEvent4TypeSend(CEP_Event & cep_ev, bool * quit_epoll_wait)
+void CEP::handleEvent4TypeSend(CEPEvent & cep_ev, bool * quit_epoll_wait)
 {
-	ssize_t len = sendn(cep_ev.fd, cep_ev.buf, cep_ev.len);
+	ssize_t len = sendn(cep_ev.fd, cep_ev.sharedBuffer.get(), cep_ev.len);
 	cep_ev.len = len;
+	cep_ev.last_active = time(NULL);
 	if(cep_ev.callback != NULL)
 		cep_ev.callback(cep_ev, *this, len != -1, quit_epoll_wait);
 }
 
-void CEP::handleEvent4TypeRecv(CEP_Event & cep_ev, bool * quit_epoll_wait)
+void CEP::handleEvent4TypeRecv(CEPEvent & cep_ev, bool * quit_epoll_wait)
 {
-	ssize_t len = recvn(cep_ev.fd, cep_ev.buf, MAXDATABUFSIZE);
-	cep_ev.len = len;
+	ssize_t l = recvn(cep_ev.fd, cep_ev.sharedBuffer.get(), MAXDATABUFSIZE);
+	cep_ev.len = l;
+	cep_ev.last_active = time(NULL);
 	if(cep_ev.callback != NULL)
-		cep_ev.callback(cep_ev, *this, len != -1, quit_epoll_wait);
+		cep_ev.callback(cep_ev, *this, l != -1, quit_epoll_wait);
 }
 
 /* 
@@ -293,13 +297,10 @@ ssize_t	CEP::recvn(int fd, char *buf, size_t bufsize)
 
 	ptr = (char *)buf;
 	nleft = bufsize;
-//static int i = 0;
-//std::cout<<i++<<"\n in while: bufsize = "<<bufsize<<std::endl;
 	while (nleft > 0) 
 	{
-	//std::cout<<"in while: nleft = "<<nleft<<std::endl;
 		if ( (nread = recv(fd, ptr, nleft, 0)) < 0) 
-		{//std::cout<<"xxxxxxxxxxxxxxxxxxxxxx"<<std::endl;
+		{
 			if (errno == EINTR)/* and call recv() again */
 				nread = 0;		
 			else if(errno == EAGAIN || errno == EWOULDBLOCK)//recv all can recv.
@@ -308,15 +309,12 @@ ssize_t	CEP::recvn(int fd, char *buf, size_t bufsize)
 				return -1;
 		} 
 		else if (nread == 0) //EOF. recv all.
-		{
-			//std::cout<<"eof"<<std::endl;
-			break;				
-		}
+			break;
+			
 		nleft -= nread;
 		ptr   += nread;
 	}
-//std::cout<<i-1<<"> bufsize - nleft ="<<bufsize - nleft<<std::endl;
-	return(bufsize - nleft);
+	return bufsize - nleft;
 }
 
 ssize_t	CEP::sendn(int fd, char *buf, size_t len)
@@ -329,7 +327,7 @@ ssize_t	CEP::sendn(int fd, char *buf, size_t len)
 	nleft = len;
 	while (nleft > 0) 
 	{
-		if ( (nsend = send(fd, ptr, nleft, 0)) < 0) 
+		if ( (nsend = send(fd, ptr, nleft, 0)) <= 0) 
 		{
 			if (errno == EINTR)/* and call send() again */
 				nsend = 0;		

@@ -9,6 +9,7 @@ else
 fi
 cd $SH_DIR
 
+#rm -rf BUILD
 mkdir BUILD
 cd BUILD
 cmake ..

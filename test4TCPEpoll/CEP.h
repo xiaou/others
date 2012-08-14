@@ -14,105 +14,88 @@
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
+#include <tr1/memory>
+#if 1 //test
+using namespace std;
+#endif
 
 
 #define	 MAXDATABUFSIZE	   1024 /**< 一个事件的数据buffer最大1kb,太大了悲剧，会分包(分包我不管).*/
+#define  MAXCONNTIMEOUT	   120/*senconds*//**< 如果客户连接这么久没任何数据到来，就认为超时了,会关掉连接. */
 
 
 class CEP;
-
-class CEP_Event;
-
-typedef void (*CEP_Event_DoneCallback)(CEP_Event &, CEP &, bool handledSuccess, bool * quit_epoll_wait/* default is false. */);  
+class CEPEvent;
+typedef void (*CEPEventDoneCallback)(CEPEvent &, CEP &, bool handledSuccess, bool * quit_epoll_wait/* default is false. */);  
+typedef std::tr1::shared_ptr<CEPEvent>  CSharedCEPEventPtr;
 
 //
-struct CEP_Event
+struct CEPEvent
 {	
+public:
 	int fd;  
-	int newClientFd;// if it's Type_Listen typed CEP_Event, when event come, it'll accept a new client fd.
+	int newClientFd;// if it's Type_Listen typed CEPEvent, when event come, it'll accept a new client fd.
 	
 	enum Type
 	{
-		Type_Connect, /**< 连接成功或失败后调用回调函数。无论成功失败，此事件仅一次(EPOLLONESHOT),此后将把他移除.除非在回调里addEvent或modEvent.*/
+		Type_Connect, /**< 连接成功或失败后调用回调函数。无论成功失败，此事件仅一次(EPOLLONESHOT),此后会自动把他移除.除非在回调里addEvent或modEvent.*/
 		Type_Listen, /**< accept成功或失败后调用回调函数。newClientFd被赋值(即使回调的handledSuccess参数为true，newClientFd仍然需要判断是否为-1). */
 		Type_Send, /**< 成功或失败的发送完数据后调用回调函数.len为实际发送的长度.(可能为-1，此时handledSuccess参数为false). */
 		Type_Recv, /**< 成功或失败的收完缓冲区里的全部数据后调用回调函数.len为实际收到的长度.(可能为-1，此时handledSuccess参数为false). */
 	} type;
     
-    CEP_Event_DoneCallback callback;
+    CEPEventDoneCallback callback;
     
-    char * buf;   
+    typedef std::tr1::shared_ptr<char> CSharedBuffer;
+    CSharedBuffer sharedBuffer;   
     int len;  
     
-    ///
-    //
-    CEP_Event()
-	:newClientFd(-1), callback(NULL), buf(NULL), len(0), canRemoveFromArray(false)
+private:
+ 	long last_active; // last active time 
+	bool canRemoveFromArray;
+	friend class CEP;   
+
+public:
+    CEPEvent()
+	:newClientFd(-1), callback(NULL), len(0), canRemoveFromArray(false)
     { 
 		mallocBuffer(); 
 	}
     
-    CEP_Event(int fdA, Type typeA, CEP_Event_DoneCallback callbackA = NULL, 
+    CEPEvent(int fdA, Type typeA, CEPEventDoneCallback callbackA = NULL, 
 			char bufA[] = NULL, int lenA = 0)
-	:fd(fdA), type(typeA), callback(callbackA), buf(NULL), len(0), newClientFd(-1), canRemoveFromArray(false)
+	:fd(fdA), type(typeA), callback(callbackA), len(0), newClientFd(-1), canRemoveFromArray(false)
 	{
 		mallocBuffer(); 
 		
 		if((len = lenA) > MAXDATABUFSIZE)
 			len = MAXDATABUFSIZE;
-		memcpy(buf, bufA, len);
+		memcpy(sharedBuffer.get(), bufA, len);
 	}
 	
-	~CEP_Event()
+	~CEPEvent()
 	{ 
-		if(buf)
-			delete []buf;
 	}
-	
-	///复制控制
-	//
-	CEP_Event(const CEP_Event & a)
-	:fd(a.fd), type(a.type), callback(a.callback), buf(NULL), len(a.len), newClientFd(a.newClientFd), 
-	canRemoveFromArray(a.canRemoveFromArray), last_active(a.last_active)
-	{
-		this->mallocBuffer(); 
-		if(this->buf) 
-			memcpy(this->buf, a.buf, a.len); 
-	}
-	CEP_Event & operator=(const CEP_Event & a)
-	{   
-		this->fd = a.fd;
-		this->type = a.type; 
-		this->callback = a.callback;
-		this->buf = NULL;
-		this->len = a.len; 
-		this->newClientFd = a.newClientFd;
-		this->canRemoveFromArray = a.canRemoveFromArray;
-		this->last_active = a.last_active;
-	
-		this->mallocBuffer(); 
-		if(this->buf) 
-			memcpy(this->buf, a.buf, a.len); 
-		return *this;
-	}
-	
+	#if 1
+	void coutthis(){ std::cout<<this<<std::endl; }
+	#endif
 private:
+	static void releaseBuffer(char * buf){  if(buf) delete []buf;  }
+
 	void mallocBuffer()
 	{
-		if(buf == NULL)
+		if(sharedBuffer == NULL) 
 		{
-			if((buf = new char[MAXDATABUFSIZE]) == NULL)
+			char * buf = new char[MAXDATABUFSIZE];
+			if(!buf)
 			{
-				std::cerr<<"malloc() faild."<<std::endl;
+				std::cerr<<"new char["<<MAXDATABUFSIZE<<"] faild"<<std::endl;
 				fd = -1;
 			}
+			else
+				sharedBuffer = CSharedBuffer(buf, releaseBuffer);
 		}
-	}
-	
-	long last_active; // last active time 
-	bool canRemoveFromArray;
-	friend class CEP;
-	
+	}	
 };
 
 
@@ -122,32 +105,30 @@ class CEP
 public:
 	CEP();
 	virtual ~CEP(){ close(m_epfd); }
-	virtual bool addEvent(CEP_Event & cep_ev);
-	virtual bool modEvent(CEP_Event & cep_ev);
-	virtual bool delEvent(CEP_Event & cep_ev);/**< 为了效率，在删除epoll事件后并不从数组里移除，仅把canRemoveFromArray设为true，在check */
+	virtual bool addEvent(CEPEvent & cep_ev);
+	virtual bool modEvent(CEPEvent & cep_ev);
+	virtual bool delEvent(CEPEvent & cep_ev);/**< 为了效率，在删除epoll事件后并不从数组里移除，仅把canRemoveFromArray设为true，在check */
 	virtual bool delEvent(size_t index);/**< 删除epoll事件，并从数组里移除. */
 	size_t currEventsNum(){ return m_events.size(); }
 	virtual int runloop_epoll_wait();/**< retval -1 error. */
 
 protected:
-	virtual bool setEvent4epoll_event(CEP_Event & cep_ev, int epoll_ctl_op);
+	virtual bool setEvent4epoll_event(CEPEvent & cep_ev, int epoll_ctl_op);
 	virtual void checkTimeAndRemove();		
-	virtual bool checkEventSocket(CEP_Event & cep_ev);/**< 检查CEP_Event::fd套接字的SO_ERROR选项，并确保O_NONBLOCK. */
-	virtual void handleEvent(CEP_Event & cep_ev, uint32_t epoll_event_events, bool * quit_epoll_wait);
-	virtual void handleEvent4TypeConnect(CEP_Event & cep_ev, bool * quit_epoll_wait);
-	virtual void handleEvent4TypeListen(CEP_Event & cep_ev, bool * quit_epoll_wait);
-	virtual void handleEvent4TypeSend(CEP_Event & cep_ev, bool * quit_epoll_wait);
-	virtual void handleEvent4TypeRecv(CEP_Event & cep_ev, bool * quit_epoll_wait);
+	virtual bool checkEventSocket(CEPEvent & cep_ev);/**< 检查CEPEvent::fd套接字的SO_ERROR选项，并确保O_NONBLOCK. */
+	virtual void handleEvent(CEPEvent & cep_ev, uint32_t epoll_event_events, bool * quit_epoll_wait);
+	virtual void handleEvent4TypeConnect(CEPEvent & cep_ev, bool * quit_epoll_wait);
+	virtual void handleEvent4TypeListen(CEPEvent & cep_ev, bool * quit_epoll_wait);
+	virtual void handleEvent4TypeSend(CEPEvent & cep_ev, bool * quit_epoll_wait);
+	virtual void handleEvent4TypeRecv(CEPEvent & cep_ev, bool * quit_epoll_wait);
 		
-	int m_epfd;
-	std::vector<CEP_Event> m_events;
-	size_t m_checkPos;
-	
-	///help functions
-	//
 	inline bool setNonBlocking(int sockfd);
 	ssize_t	recvn(int fd, char *buf, size_t bufsize);
-	ssize_t	sendn(int fd, char *buf, size_t len);
+	ssize_t	sendn(int fd, char *buf, size_t len);	
+	
+	int m_epfd;
+	std::vector<CSharedCEPEventPtr> m_events;
+	size_t m_checkPos;
 };
 
 #endif // #ifndef _CEP_H_

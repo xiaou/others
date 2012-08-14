@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 PROJECT(tcpepoll)
 SET(CMAKE_C_COMPILER "g++")
+SET(CMAKE_C_FLAGS "-g")
 
 SET(SRC_CLIENT client.c CEP.cpp)
 SET(SRC_SERVER server.c CEP.cpp)

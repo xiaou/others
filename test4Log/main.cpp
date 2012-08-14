@@ -1,15 +1,52 @@
-#include "LOG.H"
+
 #include "iostream"
+#include <tr1/memory>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <vector>
+#include <assert.h>
+
+using namespace std;
+using std::tr1::shared_ptr;
+using std::auto_ptr;
+
+class C
+{
+public:
+	C()
+	{ 
+
+	}
+	~C()
+	{ 
+
+	}
+	int i;
+	void func(){}
+};
+
+typedef shared_ptr<C> CSharedCPtr;
+
+void func(C & c){}
+
+void func2(C * c){}
 
 int main()
 {
-	//LOG_GLOBAL_INIT(1, 0, LOG_LEVEL_DEBUG);
-	LOG_FATAL("xx");
+	vector<CSharedCPtr> arr;
+	//arr.push_back( new C );//err.
+	arr.push_back( CSharedCPtr(new C) );
 
-	for(int i = 0; i != 1; i++);
-	
-	std::cerr<<"test cerr"<<std::endl;
+	vector<CSharedCPtr>::iterator it = arr.begin();
+	func(*(arr[0]));
+	func( *it->get() );
+	func(**it);
 
-	std::cout<<"return 0;"<<std::endl;
-	return 0;
+	arr[0]->func();	
+
+	(*it).get()->func();
+	(*it)->func();
+	(*it)->i;
 }
+

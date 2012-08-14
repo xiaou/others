@@ -85,7 +85,7 @@ int main()
 						if(optval == 0) //connect success.
 						{
 							//char buf[1024*32];
-							char buf[1020];
+							char buf[1028];
 							memset(buf, '4', sizeof buf);
 							do{			
 								cout<< "send len:";

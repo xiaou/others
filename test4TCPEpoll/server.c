@@ -11,25 +11,25 @@ using namespace std;
 uint16_t g_port = 9002;
 
 
-void callback4cepev(CEP_Event & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epoll_wait)
+void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epoll_wait)
 {
 	switch(cep_ev.type)
 	{
-		case CEP_Event::Type_Listen:
+		case CEPEvent::Type_Listen:
 		{
 			if(handledSuccess)
 			{
 				if(cep_ev.newClientFd == -1)
 					return;
 				
-				cout<<"new client connect.fd ="<<cep_ev.fd<<endl;
-		
-				CEP_Event cep_ev_recv(cep_ev.newClientFd, CEP_Event::Type_Recv, callback4cepev);
+				cout<<"new client connect.fd ="<<cep_ev.newClientFd<<".by listen fd:"<<cep_ev.fd<<endl;
+
+				CEPEvent cep_ev_recv(cep_ev.newClientFd, CEPEvent::Type_Recv, callback4cepev);
 				if(!cep.addEvent(cep_ev_recv))
 				{
 					cout<<"CEP::addEvent() wrong!"<<endl;
 					exit(-1);
-				}
+				}	
 			}
 			else
 			{
@@ -37,7 +37,7 @@ void callback4cepev(CEP_Event & cep_ev, CEP & cep, bool handledSuccess, bool * q
 			}
 		}
 		break;
-		case CEP_Event::Type_Recv:
+		case CEPEvent::Type_Recv:
 		{
 			if(cep_ev.len < 0)
 			{
@@ -45,14 +45,8 @@ void callback4cepev(CEP_Event & cep_ev, CEP & cep, bool handledSuccess, bool * q
 			}
 			else if(cep_ev.len > 0)
 			{
-				cout<<"fuck:"<<cep_ev.len<<endl;
-				char * p = cep_ev.buf + 10;
-				*p = 0;
-				printf("[[%s\n", cep_ev.buf);
-				//sprintf(p, "xxx%s", "22");
-				//cep_ev.buf[10] = 0;
-				//printf("[%s]len = %d\n", cep_ev.buf, cep_ev.len);
-				//cout<<"recv:["<< cep_ev.buf <<"]len = "<<cep_ev.len<<endl;
+				*(cep_ev.sharedBuffer.get()+10) = 0;
+				cout<<"recv:["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
 			}
 		}
 		break;
@@ -98,11 +92,11 @@ int main()
 		return -1;
 	}
 	else
-		cout << "listen in " << g_port << endl;
+		cout << "fd("<<listenfd<<")"<<"listen in " << g_port << endl;
 	
 	//epoll~
 	CEP cep;
-	CEP_Event cep_ev(listenfd, CEP_Event::Type_Listen, callback4cepev);
+	CEPEvent cep_ev(listenfd, CEPEvent::Type_Listen, callback4cepev);
 
 	if(!cep.addEvent(cep_ev))
 	{
