@@ -21,7 +21,7 @@ using namespace std;
 
 
 #define	 MAXDATABUFSIZE	   1024 /**< 一个事件的数据buffer最大1kb,太大了悲剧，会分包(分包我不管).*/
-#define  MAXCONNTIMEOUT	   120/*senconds*//**< 如果客户连接这么久没任何数据到来，就认为超时了,会关掉连接. */
+#define  MAXCONNTIMEOUT	   60/*senconds*//**< 如果客户连接这么久没任何数据到来，就认为超时了,会关掉连接. */
 
 
 class CEP;
@@ -38,7 +38,7 @@ public:
 	
 	enum Type
 	{
-		Type_Connect, /**< 连接成功或失败后调用回调函数。无论成功失败，此事件仅一次(EPOLLONESHOT),此后会自动把他移除.除非在回调里addEvent或modEvent.*/
+		Type_Connect, /**< 连接成功或失败后调用回调函数。无论成功失败，此事件仅一次(EPOLLONESHOT),此后会自动delEvent这个事件.除非你modEvent这个事件.*/
 		Type_Listen, /**< accept成功或失败后调用回调函数。newClientFd被赋值(即使回调的handledSuccess参数为true，newClientFd仍然需要判断是否为-1). */
 		Type_Send, /**< 成功或失败的发送完数据后调用回调函数.len为实际发送的长度.(可能为-1，此时handledSuccess参数为false). */
 		Type_Recv, /**< 成功或失败的收完缓冲区里的全部数据后调用回调函数.len为实际收到的长度.(可能为-1，此时handledSuccess参数为false). */
@@ -56,6 +56,9 @@ private:
 	friend class CEP;   
 
 public:
+	inline char * buf(){ return sharedBuffer == NULL ? NULL : sharedBuffer.get(); }/**< the buffer size is MAXDATABUFSIZE. */
+	inline size_t bufsize(){ return sharedBuffer == NULL ? 0 : MAXDATABUFSIZE; }
+
     CEPEvent()
 	:newClientFd(-1), callback(NULL), len(0), canRemoveFromArray(false)
     { 
@@ -109,8 +112,9 @@ public:
 	/** set maximum file descriptor number that can be opened by this process. */
 	bool setMaximumNumberFilesOpened(size_t num); 
 	
-	virtual bool addEvent(CEPEvent & cep_ev);
+	virtual bool addEvent(CEPEvent cep_ev);
 	virtual bool modEvent(CEPEvent & cep_ev);
+	virtual bool modEvent(CEPEvent & cep_ev, CEPEvent::Type newType){ cep_ev.type = newType; return modEvent(cep_ev); }
 	virtual bool delEvent(CEPEvent & cep_ev);/**< 为了效率，在删除epoll事件后并不从数组里移除，仅把canRemoveFromArray设为true，在check */
 	virtual bool delEvent(size_t index);/**< 删除epoll事件，并从数组里移除. */
 	virtual int runloop_epoll_wait();/**< retval -1 error. */

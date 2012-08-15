@@ -1,108 +1,95 @@
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/epoll.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/resource.h>
-#include <time.h>
-#include <netinet/in.h>
+#include "CEP.h"
 #include <arpa/inet.h>
-#include <errno.h>
-#include <string.h>
 #include <iostream>
-#include "LOG.H"
+#include <errno.h>
+#include <assert.h>
+#include <stdio.h>
 
 using namespace std;
 
-#define  MAXEPOLLSIZE  50
-uint16_t g_port = 9002;
-int g_epfd = 0;
-struct epoll_event g_events[MAXEPOLLSIZE];
-int g_nevents = 0;
+uint16_t g_port = 9011;
 
-int setnonblocking(int sockfd)
+void callback(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epoll_wait)
 {
-    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0)|O_NONBLOCK) == -1)
-        return -1;
-    return 0;
+	if(!handledSuccess)
+	{
+		cout<<"handled not success. CEPEvent::Type = "<<cep_ev.type<<endl;
+		cep.delEvent(cep_ev);
+		*quit_epoll_wait = true;
+		return;
+	}
+	
+	switch(cep_ev.type)
+	{
+		case CEPEvent::Type_Connect:
+		{
+			char * buf = cep_ev.buf();
+			assert(buf);
+			cep_ev.len = 1 + snprintf(buf, cep_ev.bufsize(), "this is buffer of client fd %d", cep_ev.fd);
+			cep.modEvent(cep_ev, CEPEvent::Type_Send);
+		}
+		break;
+		case CEPEvent::Type_Send:
+		{
+			//if(cep_ev.len > 0)
+				cout<<"sended data:["<< cep_ev.buf() << "]len = "<<cep_ev.len<<endl;
+		}
+		break;
+		case CEPEvent::Type_Recv:
+		{
+			
+		}
+		break;
+		default:
+		cout<<"what's the matter?"<<endl;
+	}
 }
 
 int main()
 {
-	int connfd = socket(AF_INET, SOCK_STREAM, 0);
-	if(connfd == -1)
-		return -1;
-	setnonblocking(connfd);
-	
+	bool b;
+	CEP cep;
+
+	const size_t nConn(2);
+	int fds[nConn];
+
 	struct sockaddr_in addr;
 	bzero(&addr, sizeof addr);
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(g_port);
-	if(inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) != 1)
-		return -1;
-
-	if(connect(connfd, (struct sockaddr *)&addr, sizeof addr) == -1)
-	{
-		if(errno != EINPROGRESS)
-		{		
-			cout<<"connect error."<<endl;
-			return -1;
-		}
-	}
-
-	g_epfd = epoll_create(MAXEPOLLSIZE);
+	inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
 	
-	struct epoll_event ep_ev;
-
-	ep_ev.events = EPOLLOUT | EPOLLET;
-	ep_ev.data.fd = connfd;
-	epoll_ctl(g_epfd, EPOLL_CTL_ADD, connfd, &ep_ev);
-	g_nevents ++;
-
-	int nReady;
-	int optval;
-	socklen_t optlen;
-	while(1)
+	for(int i = 0; i != nConn; i++)
 	{
-		nReady = epoll_wait(g_epfd, g_events, g_nevents, 2000);
-		if(nReady < 0 )
+		fds[i] = socket(AF_INET, SOCK_STREAM, 0);
+		if(fds[i] == -1)
+			return -1;
+		if(connect(fds[i], (struct sockaddr *)&addr, sizeof addr) == -1)
 		{
-			if(errno == EINTR)
-				continue;
-			cout<< "epoll_wait() error. errno="<<errno<<"."<<strerror(errno)<<endl;
-			break;
-		}
-		for(int i = 0; i != nReady; i++)
-		{	
-			if(g_events[i].data.fd == connfd)
+			if(errno == EINPROGRESS)
+			{//add connect event:	
+				cout<<"add Type_Connect CEPEvent."<<endl;
+				b = cep.addEvent(CEPEvent(fds[i], CEPEvent::Type_Connect, callback));
+				assert(b);
+			}
+			else
 			{
-				if(g_events[i].events == EPOLLOUT)
-				{
-					optlen = sizeof optval;
-					if(getsockopt(connfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) == 0)
-					{
-						if(optval == 0) //connect success.
-						{
-							//char buf[1024*32];
-							char buf[1028];
-							memset(buf, '4', sizeof buf);
-							do{			
-								cout<< "send len:";
-								cout<< send(connfd, buf, sizeof buf, 0)<<endl;
-								return 0;
-							}while(usleep(1000 * 1000) == 0);
-							continue;
-						}
-					}
-				}
-				//
-				LOG_ERROR("connect faild.");
-				close(connfd);
+				cout<<"connect error."<<endl;
+				return -1;
 			}
 		}
-	}//__while(1)__
-
-	close(g_epfd);	
+		else
+		{//connect success already. add send event:
+			char buf[128];
+			size_t len = 1 + snprintf(buf, 128, "this is buffer of client fd %d", fds[i]);
+			
+			b = cep.addEvent(CEPEvent(fds[i], CEPEvent::Type_Send, callback, buf, len));
+			assert(b);
+		}
+	}
+	
+	if(cep.runloop_epoll_wait() == -1)
+		cout<<"CEP::runloop_epoll_wait() failed!" <<endl;
+	
 	return 0;
 }

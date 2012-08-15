@@ -8,7 +8,7 @@
 using namespace std;
 
 
-uint16_t g_port = 9002;
+uint16_t g_port = 9011;
 
 
 void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epoll_wait)
@@ -45,8 +45,7 @@ void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * qu
 			}
 			else if(cep_ev.len > 0)
 			{
-				*(cep_ev.sharedBuffer.get()+10) = 0;
-				cout<<"recv:["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
+				cout<<"recv by fd "<< cep_ev.fd <<":["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
 			}
 		}
 		break;
@@ -86,7 +85,7 @@ int main()
 	
 	//epoll~
 	CEP cep;
-	cep.setMaximumNumberFilesOpened(1000*1000);
+	//cep.setMaximumNumberFilesOpened(1000*1000);
 	CEPEvent cep_ev(listenfd, CEPEvent::Type_Listen, callback4cepev);
 
 	if(!cep.addEvent(cep_ev))

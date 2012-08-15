@@ -1,2 +1,0 @@
-/home/spring/myGits/others/test4TCPEpoll/BUILD/CMakeFiles/client.dir
-/home/spring/myGits/others/test4TCPEpoll/BUILD/CMakeFiles/server.dir

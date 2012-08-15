@@ -63,7 +63,7 @@ bool CEP::setEvent4epoll_event(CEPEvent & cep_ev, int epoll_ctl_op)
 	return (epoll_ctl(m_epfd, epoll_ctl_op, cep_ev.fd, &ep_ev) == 0);		
 }
 
-bool CEP::addEvent(CEPEvent & cep_ev)
+bool CEP::addEvent(CEPEvent cep_ev)
 {
 	if(!checkEventSocket(cep_ev)) 
 		return false;
@@ -219,19 +219,27 @@ void CEP::handleEvent(CEPEvent & cep_ev, uint32_t epoll_event_events, bool * qui
 	switch(cep_ev.type)
 	{
 		case CEPEvent::Type_Connect:
-			if(epoll_event_events & EPOLLOUT)
+			if(epoll_event_events == EPOLLOUT)
 				handleEvent4TypeConnect(cep_ev, quit_epoll_wait);
 			break;
 		case CEPEvent::Type_Listen:
-			if(epoll_event_events & EPOLLIN)
+			if(epoll_event_events == EPOLLIN)
 				handleEvent4TypeListen(cep_ev, quit_epoll_wait);
 			break;
 		case CEPEvent::Type_Send:
-			if(epoll_event_events & EPOLLOUT)
+		#if 0
+		if(epoll_event_events & EPOLLRDHUP)
+			cout<<"EPOLLRDHUP fd = "<<cep_ev.fd<<endl;
+		if(epoll_event_events & EPOLLERR)
+			cout<<"EPOLLERR fd = "<<cep_ev.fd<<endl;
+		if(epoll_event_events & EPOLLHUP)
+			cout<<"EPOLLHUP fd = "<<cep_ev.fd<<endl;
+		#endif
+			if(epoll_event_events == EPOLLOUT)
 				handleEvent4TypeSend(cep_ev, quit_epoll_wait);
 			break;
 		case CEPEvent::Type_Recv:
-			if(epoll_event_events & EPOLLIN)
+			if(epoll_event_events == EPOLLIN)
 				handleEvent4TypeRecv(cep_ev, quit_epoll_wait);
 			break;
 	}
@@ -329,7 +337,7 @@ ssize_t	CEP::sendn(int fd, char *buf, size_t len)
 	nleft = len;
 	while (nleft > 0) 
 	{
-		if ( (nsend = send(fd, ptr, nleft, 0)) <= 0) 
+		if ( (nsend = send(fd, ptr, nleft, 0)) < 0) 
 		{
 			if (errno == EINTR)/* and call send() again */
 				nsend = 0;		
@@ -338,6 +346,8 @@ ssize_t	CEP::sendn(int fd, char *buf, size_t len)
 			else //some error.
 				return -1;
 		} 	
+		else if(nsend == 0) 
+			break;
 		
 		nleft -= nsend;
 		ptr   += nsend;

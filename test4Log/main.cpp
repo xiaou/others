@@ -34,6 +34,9 @@ void func2(C * c){}
 
 int main()
 {
+	shared_ptr<char> sp;
+cout<<"sp.get() = "<<(int)sp.get()<<endl;
+return 0;
 	vector<CSharedCPtr> arr;
 	//arr.push_back( new C );//err.
 	arr.push_back( CSharedCPtr(new C) );
