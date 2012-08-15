@@ -8,12 +8,14 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
-#include <algorithm>
+#include <signal.h>
 #include <stdio.h>
+#include <algorithm>
 
 
 CEP::CEP()
 { 
+	signal(SIGPIPE, SIG_IGN);//这个信号太危险了.反正没什么用就全局忽略吧.
 	if((m_epfd = epoll_create(1)) == -1) 
 		std::cerr<<"faild in CEP().error["<<errno<<"]:"<<strerror(errno)<<std::endl; 
 }
@@ -343,8 +345,20 @@ ssize_t	CEP::sendn(int fd, char *buf, size_t len)
 	return(len - nleft);
 }
 
-inline bool CEP::setNonBlocking(int sockfd)
+bool CEP::setNonBlocking(int sockfd)
 {
 	return (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0)|O_NONBLOCK) != -1);
 }
 
+bool CEP::setMaximumNumberFilesOpened(size_t num)
+{
+	struct rlimit rt;
+	/* 设置每个进程允许打开的最大文件数 */
+    rt.rlim_max = rt.rlim_cur = num;
+	if( setrlimit(RLIMIT_NOFILE, &rt) == -1 )//need sudo.
+	{
+		std::cerr<< "setrlimit() faild.error(" <<errno<<"):"<<strerror(errno) <<std::endl;
+		return false;
+	}
+	return true;
+}

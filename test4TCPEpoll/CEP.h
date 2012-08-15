@@ -105,12 +105,17 @@ class CEP
 public:
 	CEP();
 	virtual ~CEP(){ close(m_epfd); }
+	
+	/** set maximum file descriptor number that can be opened by this process. */
+	bool setMaximumNumberFilesOpened(size_t num); 
+	
 	virtual bool addEvent(CEPEvent & cep_ev);
 	virtual bool modEvent(CEPEvent & cep_ev);
 	virtual bool delEvent(CEPEvent & cep_ev);/**< 为了效率，在删除epoll事件后并不从数组里移除，仅把canRemoveFromArray设为true，在check */
 	virtual bool delEvent(size_t index);/**< 删除epoll事件，并从数组里移除. */
-	size_t currEventsNum(){ return m_events.size(); }
 	virtual int runloop_epoll_wait();/**< retval -1 error. */
+	
+	size_t currEventsNum(){ return m_events.size(); }
 
 protected:
 	virtual bool setEvent4epoll_event(CEPEvent & cep_ev, int epoll_ctl_op);
@@ -122,9 +127,9 @@ protected:
 	virtual void handleEvent4TypeSend(CEPEvent & cep_ev, bool * quit_epoll_wait);
 	virtual void handleEvent4TypeRecv(CEPEvent & cep_ev, bool * quit_epoll_wait);
 		
-	inline bool setNonBlocking(int sockfd);
+	bool setNonBlocking(int sockfd);
 	ssize_t	recvn(int fd, char *buf, size_t bufsize);
-	ssize_t	sendn(int fd, char *buf, size_t len);	
+	ssize_t	sendn(int fd, char *buf, size_t len);
 	
 	int m_epfd;
 	std::vector<CSharedCEPEventPtr> m_events;

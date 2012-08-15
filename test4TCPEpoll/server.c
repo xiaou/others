@@ -58,16 +58,6 @@ void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * qu
 int main()
 {
 	LOG_GLOBAL_INIT(0 ,0, 0);
-#if 0
-	struct rlimit rt;
-	/* 设置每个进程允许打开的最大文件数 */
-    rt.rlim_max = rt.rlim_cur = MAXEPOLLSIZE;
-	if( setrlimit(RLIMIT_NOFILE, &rt) == -1 )//need sudo.
-	{
-		cout<< "setrlimit faild.errno=" <<errno<<"."<<strerror(errno) <<endl;
-		return -1;
-	}
-#endif
 
 	int listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(listenfd < 0)
@@ -96,6 +86,7 @@ int main()
 	
 	//epoll~
 	CEP cep;
+	cep.setMaximumNumberFilesOpened(1000*1000);
 	CEPEvent cep_ev(listenfd, CEPEvent::Type_Listen, callback4cepev);
 
 	if(!cep.addEvent(cep_ev))

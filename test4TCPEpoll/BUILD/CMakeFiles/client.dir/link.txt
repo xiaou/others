@@ -1,0 +1,1 @@
+/usr/bin/c++       CMakeFiles/client.dir/client.c.o CMakeFiles/client.dir/CEP.cpp.o  -o ../client -rdynamic -L/home/spring/myGits/others/test4TCPEpoll/../common/lib -lpthread -lLOG -Wl,-rpath,/home/spring/myGits/others/test4TCPEpoll/../common/lib 
