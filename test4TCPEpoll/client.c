@@ -64,6 +64,7 @@ int main()
 		fds[i] = socket(AF_INET, SOCK_STREAM, 0);
 		if(fds[i] == -1)
 			return -1;
+		
 		if(connect(fds[i], (struct sockaddr *)&addr, sizeof addr) == -1)
 		{
 			if(errno == EINPROGRESS)

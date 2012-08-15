@@ -15,7 +15,7 @@
 
 CEP::CEP()
 { 
-	signal(SIGPIPE, SIG_IGN);//这个信号太危险了.反正没什么用就全局忽略吧.
+	signal(SIGPIPE, SIG_IGN);//这个信号太危险了. 直接全局忽略吧.
 	if((m_epfd = epoll_create(1)) == -1) 
 		std::cerr<<"faild in CEP().error["<<errno<<"]:"<<strerror(errno)<<std::endl; 
 }
@@ -110,6 +110,7 @@ bool CEP::delEvent(size_t index)
 	return res;
 }
 
+/** 为了效率，这里在删除epoll事件后并不从数组里erase，仅把canRemoveFromArray设为true，在checkTimeAndRemove里移除. */
 bool CEP::delEvent(CEPEvent & cep_ev) 
 {
 	bool res = epoll_ctl(m_epfd, EPOLL_CTL_DEL, cep_ev.fd, NULL);
@@ -141,7 +142,7 @@ int CEP::runloop_epoll_wait()
 		
 		size_t currEventsNum = m_events.size();
 		if(currEventsNum == 0)
-			return 0;
+			break;
 		if(currEventsNum > n_ep_evs_buf)
 		{
 			n_ep_evs_buf = currEventsNum + 128;
@@ -170,7 +171,7 @@ int CEP::runloop_epoll_wait()
 			p_cep_ev->last_active = time(NULL);
 			handleEvent(*p_cep_ev, ep_evs_buf[i].events, &quit_epoll_wait);
 			if(quit_epoll_wait)
-				return 0;
+				return 1;
 		}	
 	}
 	return 0;
@@ -219,7 +220,17 @@ void CEP::handleEvent(CEPEvent & cep_ev, uint32_t epoll_event_events, bool * qui
 	switch(cep_ev.type)
 	{
 		case CEPEvent::Type_Connect:
-			if(epoll_event_events == EPOLLOUT)
+		#if 0 //test
+		if(epoll_event_events & EPOLLRDHUP)
+			cout<<"EPOLLRDHUP fd = "<<cep_ev.fd<<endl;
+		if(epoll_event_events & EPOLLERR)
+			cout<<"EPOLLERR fd = "<<cep_ev.fd<<endl;
+		if(epoll_event_events & EPOLLHUP)
+			cout<<"EPOLLHUP fd = "<<cep_ev.fd<<endl;
+		if(epoll_event_events & EPOLLONESHOT)
+			cout<<"EPOLLONESHOT fd = "<<cep_ev.fd<<endl;
+		#endif
+			if(epoll_event_events & EPOLLOUT)//may be 还有EPOLLONESHOT ?
 				handleEvent4TypeConnect(cep_ev, quit_epoll_wait);
 			break;
 		case CEPEvent::Type_Listen:
@@ -227,14 +238,6 @@ void CEP::handleEvent(CEPEvent & cep_ev, uint32_t epoll_event_events, bool * qui
 				handleEvent4TypeListen(cep_ev, quit_epoll_wait);
 			break;
 		case CEPEvent::Type_Send:
-		#if 0
-		if(epoll_event_events & EPOLLRDHUP)
-			cout<<"EPOLLRDHUP fd = "<<cep_ev.fd<<endl;
-		if(epoll_event_events & EPOLLERR)
-			cout<<"EPOLLERR fd = "<<cep_ev.fd<<endl;
-		if(epoll_event_events & EPOLLHUP)
-			cout<<"EPOLLHUP fd = "<<cep_ev.fd<<endl;
-		#endif
 			if(epoll_event_events == EPOLLOUT)
 				handleEvent4TypeSend(cep_ev, quit_epoll_wait);
 			break;
@@ -250,7 +253,7 @@ void CEP::handleEvent4TypeConnect(CEPEvent & cep_ev, bool * quit_epoll_wait)
 	int optval;
 	socklen_t optlen = sizeof optval;
 	bool connectSuccess = (getsockopt(cep_ev.fd, SOL_SOCKET, SO_ERROR, &optval, &optlen) == 0 && optval == 0);
-
+	
 	cep_ev.canRemoveFromArray = true;
 	
 	if(cep_ev.callback != NULL)
@@ -360,7 +363,7 @@ bool CEP::setNonBlocking(int sockfd)
 	return (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0)|O_NONBLOCK) != -1);
 }
 
-bool CEP::setMaximumNumberFilesOpened(size_t num)
+bool CEP::SetMaximumNumberFilesOpened(size_t num)
 {
 	struct rlimit rt;
 	/* 设置每个进程允许打开的最大文件数 */
