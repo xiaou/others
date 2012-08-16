@@ -5,9 +5,9 @@
  * @warning no warning I think.
  * @author xiaoU.
  * @date 2012 E.O.W.
- * @version 1.1
+ * @version 1.21
  * @par 修改记录：
- *  -1.0:
+ *  -1.2:构造函数增加参数timeout.
  */
 
 #ifndef _CEP_H_
@@ -27,7 +27,6 @@ using namespace std;
 
 
 #define	 MAXDATABUFSIZE	   1024 /**< 一个事件的数据buffer最大1kb,太大了悲剧，会分包(分包我不管).*/
-#define  MAXCONNTIMEOUT	   60/*senconds*//**< 如果客户连接这么久没任何数据到来，就认为超时了,会关掉连接. */
 
 
 class CEP;
@@ -116,12 +115,8 @@ private:
 class CEP
 {
 public:
-	CEP();
+	CEP(size_t maxConnTimeout = 120); /**< maxConnTimeout is timeout. see \c m_maxConnTimeout . */
 	virtual ~CEP(){ close(m_epfd); }
-	
-	/** set maximum file descriptor number that can be opened by this process. */
-	static bool SetMaximumNumberFilesOpened(size_t num);
-	bool setMaximumNumberFilesOpened(size_t num){ return CEP::SetMaximumNumberFilesOpened(num); }
 	
 	virtual bool addEvent(CEPEvent cep_ev);
 	virtual bool modEvent(CEPEvent & cep_ev);/**< @note mod时间如果失败就会从数组里移除这个事件. */
@@ -132,6 +127,24 @@ public:
 	
 	size_t currEventsNum(){ return m_events.size(); }
 
+
+	///user help functions.
+	//
+	/** set maximum file descriptor number that can be opened by this process. */
+	static bool SetMaximumNumberFilesOpened(size_t num);
+	/** set the socked to nonblock if it's block. */
+	static bool SetNonBlocking(int sockfd);
+	/** recvn */
+	static ssize_t Recvn(int fd, char *buf, size_t bufsize);
+	/** sendn */
+	static ssize_t	Sendn(int fd, char *buf, size_t len);
+	//
+	bool setMaximumNumberFilesOpened(size_t num){ return CEP::SetMaximumNumberFilesOpened(num); }
+	bool setNonBlocking(int sockfd){ return CEP::SetNonBlocking(sockfd); }
+	ssize_t	recvn(int fd, char *buf, size_t bufsize){ return CEP::Recvn(fd, buf, bufsize); }
+	ssize_t	sendn(int fd, char *buf, size_t len){ return CEP::Sendn(fd, buf, len); }
+	
+
 protected:
 	virtual bool setEvent4epoll_event(CEPEvent & cep_ev, int epoll_ctl_op);
 	virtual void checkTimeAndRemove();
@@ -141,14 +154,11 @@ protected:
 	virtual void handleEvent4TypeListen(CEPEvent & cep_ev, bool * quit_epoll_wait);
 	virtual void handleEvent4TypeSend(CEPEvent & cep_ev, bool * quit_epoll_wait);
 	virtual void handleEvent4TypeRecv(CEPEvent & cep_ev, bool * quit_epoll_wait);
-		
-	bool setNonBlocking(int sockfd);
-	ssize_t	recvn(int fd, char *buf, size_t bufsize);
-	ssize_t	sendn(int fd, char *buf, size_t len);
 	
 	int m_epfd;
 	std::vector<CSharedCEPEventPtr> m_events;
 	size_t m_checkPos;
+	size_t m_maxConnTimeout;/**< seconds. 如果客户连接这么久没任何数据到来，就认为超时了,会关掉连接. */
 };
 
 #endif // #ifndef _CEP_H_

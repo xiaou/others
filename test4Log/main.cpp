@@ -1,55 +1,77 @@
-
-#include "iostream"
-#include <tr1/memory>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
-#include <vector>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <iostream>
+#include <errno.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include "LOG.H"
+
 
 using namespace std;
-using std::tr1::shared_ptr;
-using std::auto_ptr;
 
-class C
+
+void atExit(void)
 {
-public:
-	C()
-	{ 
+	cout<<"in atExit().(pid = "<< getpid()<<" )."<<endl;
+usleep(1000*1000*2);
+	//cout<<"\t raise(SIGQUIT)";  raise( SIGQUIT );
+	int i = 3, j = 0;
+    int k = i / j;	
+	cout<<endl;
+	cout<<"end atExit()"<<endl;
+}
 
+void signalChild(int signum)
+{
+	cout<<"in signalChild()."<<endl;
+	pid_t pid;
+	int stat;
+	while ( (pid = waitpid(-1, &stat, WNOHANG)) > 0 )
+	{
+		cout<<"\t waited pid = "<<pid<<", status = "<<stat<<endl;
+		if(WIFSIGNALED(stat))
+			cout<<"\t it's WIFSIGNALED."<<endl;
+		if(WCOREDUMP(stat))
+			cout<<"\t it's WCOREDUMP."<<endl;
 	}
-	~C()
-	{ 
-
-	}
-	int i;
-	void func(){}
-};
-
-typedef shared_ptr<C> CSharedCPtr;
-
-void func(C & c){}
-
-void func2(C * c){}
+	cout<<"end signalChild()."<<endl;
+}
 
 int main()
 {
-	shared_ptr<char> sp;
-cout<<"sp.get() = "<<(int)sp.get()<<endl;
+const char * s = "../../";
+DIR * dir  = opendir(s);
+if(dir == NULL)
+	printf("open [%s] faild\n error(%d):%s\n", s, errno, strerror(errno));
 return 0;
-	vector<CSharedCPtr> arr;
-	//arr.push_back( new C );//err.
-	arr.push_back( CSharedCPtr(new C) );
 
-	vector<CSharedCPtr>::iterator it = arr.begin();
-	func(*(arr[0]));
-	func( *it->get() );
-	func(**it);
+LOG_GLOBAL_INIT(0, true, "~/work", "te");
 
-	arr[0]->func();	
+LOG_DEBUG("cccc");
 
-	(*it).get()->func();
-	(*it)->func();
-	(*it)->i;
+
+return 0;
+	signal(SIGCHLD, signalChild);
+
+	pid_t id = fork();
+	if(id == -1)
+		return -1;
+	else if(id == 0)//child
+	{
+		cout<<"forked pid = "<<getpid()<<endl;
+		atexit(atExit);	
+		return -1;
+	}
+	
+	system("sleep 4");
+	//usleep(1000*1000*10);
+
+	return 0;
 }
 

@@ -21,16 +21,18 @@ const LOGLEVEL	LOG_LEVEL_DEBUG = log4cplus::DEBUG_LOG_LEVEL;
 /*
  * @brief 日志的全局初始化.
  * @note 如果不调用这个函数，那么默认是参数(true, 0, 0)的调用.
- * @param[in] toFile 是否把日志输出到文件.
- * @param[in] fileName 相对与程序文件的输出文件路径.(NULL则"log/log").
  * @param[in] level 日志输出级别.只有高于等于此级别的日志才被输出.(NULL means log all).
+ * @param[in] toFile 是否把日志输出到文件.
+ * @param[in] path 日志存储路径文件夹。支持相对路径与绝对路径.(NULL则为程序所在路径下的log目录，没有则创建.不支持"~"这种路径.)
+ * @param[in] fileNamePrefix 日志文件的名称前缀.(NULL则为"log",eg:log_error.txt).
  */
-void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level);
+void LOG_GLOBAL_INIT(LOGLEVEL level, bool toFile, const char * path, const char * fileNamePrefix);
 
 /** note:一条日志输入的字节数是有限制的，超出限制将在末尾添加特殊省略号了事儿. */
 void LOG_FATAL(const char * format, ...);
 void LOG_ERROR(const char * format, ...);
 void LOG_WARN(const char * format, ...);
+void LOG_INFO(const char * format, ...);
 void LOG_DEBUG(const char * format, ...);
 
 

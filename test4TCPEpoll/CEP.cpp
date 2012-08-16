@@ -13,7 +13,7 @@
 #include <algorithm>
 
 
-CEP::CEP()
+CEP::CEP(size_t maxConnTimeout) :m_maxConnTimeout(maxConnTimeout)
 { 
 	signal(SIGPIPE, SIG_IGN);//这个信号太危险了. 直接全局忽略吧.
 	if((m_epfd = epoll_create(1)) == -1) 
@@ -200,13 +200,12 @@ void CEP::checkTimeAndRemove()
 		if(m_events[m_checkPos]->type != CEPEvent::Type_Listen)// doesn't check listen fd  
 		{
 			long duration = now - m_events[m_checkPos]->last_active;  
-			if(duration > MAXCONNTIMEOUT) //timeout  
+			if(duration > m_maxConnTimeout) //timeout  
 			{  
 				std::cout<<"fd("<<m_events[m_checkPos]->fd<<")timeout("
 				<<m_events[m_checkPos]->last_active<<"--"<<now<<")."<<std::endl;  
 				fd = m_events[m_checkPos]->fd;
 				delEvent(m_checkPos);
-				close(fd);  
 				//数组大小改变了.
 				m_checkPos -= 1;
 			}
@@ -301,7 +300,7 @@ void CEP::handleEvent4TypeRecv(CEPEvent & cep_ev, bool * quit_epoll_wait)
  * recv "n" bytes from a descriptor(for nonblock socket) and -1 is error. 
  * 注意，依然可能没有读到想要的数量。但是会从缓冲区里读完。
  */
-ssize_t	CEP::recvn(int fd, char *buf, size_t bufsize)
+ssize_t	CEP::Recvn(int fd, char *buf, size_t bufsize)
 {
 	size_t	nleft;
 	ssize_t	nread;
@@ -329,7 +328,7 @@ ssize_t	CEP::recvn(int fd, char *buf, size_t bufsize)
 	return bufsize - nleft;
 }
 
-ssize_t	CEP::sendn(int fd, char *buf, size_t len)
+ssize_t	CEP::Sendn(int fd, char *buf, size_t len)
 {
 	size_t	nleft;
 	ssize_t	nsend;
@@ -357,7 +356,7 @@ ssize_t	CEP::sendn(int fd, char *buf, size_t len)
 	return(len - nleft);
 }
 
-bool CEP::setNonBlocking(int sockfd)
+bool CEP::SetNonBlocking(int sockfd)
 {
 	return (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0)|O_NONBLOCK) != -1);
 }

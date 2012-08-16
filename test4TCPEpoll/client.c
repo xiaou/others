@@ -7,7 +7,7 @@
 
 using namespace std;
 
-uint16_t g_port = 9011;
+uint16_t g_port = 9010;
 
 void callback(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epoll_wait)
 {
@@ -68,6 +68,7 @@ int main()
 		if(fds[i] == -1)
 			return -1;
 		
+		CEP::SetNonBlocking(fds[i]);
 		if(connect(fds[i], (struct sockaddr *)&addr, sizeof addr) == -1)
 		{
 			if(errno == EINPROGRESS)

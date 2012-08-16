@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 
 using namespace log4cplus;
@@ -22,7 +23,7 @@ static bool ONLY_A_LOGGER_BOOL = false;/**< 是否所有的日志只用一个log
 #define MAX_LOGGER_A_FILE_SIZE		(1024*1024*2) /**< 一个日志文件的最大值（这是对文件日志而言的). */
 
 #define FORMAT_A_LOG_OUTPUT_SeeSrcFile_False			"[%d{%y/%m/%d %H:%M:%S.%q} %p] %m%n"
-#define FORMAT_A_LOG_OUTPUT_SeeSrcFile_True			"[%d{%y/%m/%d %H:%M:%S.%q} %p] %m[%F:%L]%n"
+#define FORMAT_A_LOG_OUTPUT_SeeSrcFile_True			"[%d{%y/%m/%d %H:%M:%S.%q} %p] %m [%F:%L]%n"
 
 
 
@@ -64,10 +65,10 @@ pthread_mutex_t * __initializeMutex()
 
 inline void __default_log_global_init_ifNeed()
 {
-	LOG_GLOBAL_INIT(true, 0, 0);/**< 请传入默认调用参数.*/
+	LOG_GLOBAL_INIT(0, true, 0, 0);/**< 请传入默认调用参数.*/
 }
 
-void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
+void LOG_GLOBAL_INIT(LOGLEVEL level, bool toFile, const char * pathA, const char * fileNamePrefixA)
 {
 	AutoLocker();
 	if(Logger::getCurrentLoggers().size())
@@ -81,28 +82,38 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 	
 	if(toFile)
 	{
-		char buf[1024];
-		
-		if(fileName == NULL)
-			fileName = "log/log";
-		
-		strcpy(buf, fileName);
-		buf[1023] = 0;
-		
+		char path[1024];
+		if(pathA == NULL)
+			sprintf(path, "log");
+		else
+			snprintf(path, 1024, pathA);
 		CDEXEDIR cdexedir;
-		
-		for(int i = strlen(buf) - 1; i >= 1; i--)
-			if(buf[i] == '/')
-			{
-				buf[i] = 0;
-				mkdir(buf, S_IRWXU);
-				break;
-			}
+		DIR *dir = opendir(path);
+		if(dir == NULL && mkdir(path, S_IRWXU) != 0)
+		{
+			sprintf(path, "log");
+			mkdir(path, S_IRWXU);
+		}
+		else
+			closedir(dir);
+		chdir(path);
+		getcwd(path, 1024);
 
+		char fileNamePrefix[1024];
+		if(fileNamePrefixA == NULL)
+			sprintf(fileNamePrefix, "log");
+		else
+			sprintf(fileNamePrefix, fileNamePrefixA);
+
+		char fileName[2048+4];
+		snprintf(fileName, sizeof fileName, "%s/%s", path, fileNamePrefix);
+
+		char buf[2048+128];
+		
 		//
 		if(ONLY_A_LOGGER_BOOL)
 		{
-			snprintf(buf, sizeof buf, "%s", fileName);
+			snprintf(buf, sizeof buf, "%s.txt", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
 			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_False));
@@ -114,7 +125,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 		else
 		{
 			//
-			snprintf(buf, sizeof buf, "%s.fatal", fileName);
+			snprintf(buf, sizeof buf, "%s_fatal.txt", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
 			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_True));
@@ -124,7 +135,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 			g_loggerFile_FATAL.setLogLevel(level);
 
 			//
-			snprintf(buf, sizeof buf, "%s.error", fileName);
+			snprintf(buf, sizeof buf, "%s_error.txt", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
 			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_True));
@@ -134,7 +145,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 			g_loggerFile_ERROR.setLogLevel(level);
 			
 			//
-			snprintf(buf, sizeof buf, "%s.warn", fileName);
+			snprintf(buf, sizeof buf, "%s_warn.txt", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
 			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_False));
@@ -144,7 +155,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 			g_loggerFile_WARN.setLogLevel(level);
 			
 			//
-			snprintf(buf, sizeof buf, "%s.info", fileName);
+			snprintf(buf, sizeof buf, "%s_info.txt", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
 			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_False));
@@ -154,7 +165,7 @@ void LOG_GLOBAL_INIT(bool toFile, const char * fileName, LOGLEVEL level)
 			g_loggerFile_INFO.setLogLevel(level);
 			
 			//
-			snprintf(buf, sizeof buf, "%s.debug", fileName);
+			snprintf(buf, sizeof buf, "%s_debug.txt", fileName);
 			append = new RollingFileAppender(buf, MAX_LOGGER_A_FILE_SIZE, MAX_LOGGER_FILENUMBER);
 			append->setName(buf);
 			layout.reset(new PatternLayout(FORMAT_A_LOG_OUTPUT_SeeSrcFile_False));
@@ -206,6 +217,11 @@ void LOG_ERROR(const char * format, ...)
 void LOG_WARN(const char * format, ...)
 {
 	IMP_INVOKE_LOG4CPLUS_what(WARN);
+}
+
+void LOG_INFO(const char * format, ...)
+{
+	IMP_INVOKE_LOG4CPLUS_what(INFO);
 }
 
 void LOG_DEBUG(const char * format, ...)

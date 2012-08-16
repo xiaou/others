@@ -8,7 +8,7 @@
 using namespace std;
 
 
-uint16_t g_port = 9011;
+uint16_t g_port = 9010;
 
 
 void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epoll_wait)
@@ -54,8 +54,6 @@ void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * qu
 
 int main()
 {
-	LOG_GLOBAL_INIT(0 ,0, 0);
-
 	int listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(listenfd < 0)
 		return -1;
