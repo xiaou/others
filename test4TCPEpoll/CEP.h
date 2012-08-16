@@ -5,7 +5,7 @@
  * @warning no warning I think.
  * @author xiaoU.
  * @date 2012 E.O.W.
- * @version 1.0
+ * @version 1.1
  * @par 修改记录：
  *  -1.0:
  */
@@ -124,10 +124,10 @@ public:
 	bool setMaximumNumberFilesOpened(size_t num){ return CEP::SetMaximumNumberFilesOpened(num); }
 	
 	virtual bool addEvent(CEPEvent cep_ev);
-	virtual bool modEvent(CEPEvent & cep_ev);
+	virtual bool modEvent(CEPEvent & cep_ev);/**< @note mod时间如果失败就会从数组里移除这个事件. */
 	virtual bool modEvent(CEPEvent & cep_ev, CEPEvent::Type newType){ cep_ev.type = newType; return modEvent(cep_ev); }
-	virtual bool delEvent(CEPEvent & cep_ev);/**< 删除epoll事件，稍后将从数组里移除. */
-	virtual bool delEvent(size_t index);/**< 删除epoll事件，并马上从数组里移除. */
+	virtual bool delEvent(CEPEvent & cep_ev);/**< 删除epoll事件并close事件的fd，稍后将从数组里移除并. */
+	virtual bool delEvent(size_t index);/**< 删除epoll事件并close事件的fd，并马上从数组里移除. */
 	virtual int runloop_epoll_wait();/**< @retval -1 error. @retval 0 the array is empty. @retval 1 user let the loop return. */
 	
 	size_t currEventsNum(){ return m_events.size(); }

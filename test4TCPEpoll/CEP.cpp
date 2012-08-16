@@ -85,10 +85,7 @@ bool CEP::addEvent(CEPEvent cep_ev)
 
 bool CEP::modEvent(CEPEvent & cep_ev)
 {
-	if(!checkEventSocket(cep_ev)) 
-		return false;
-		
-	if(setEvent4epoll_event(cep_ev, EPOLL_CTL_MOD) == false)
+	if(!checkEventSocket(cep_ev) || setEvent4epoll_event(cep_ev, EPOLL_CTL_MOD) == false)
 	{
 		delEvent(cep_ev);
 		return false;
@@ -106,6 +103,7 @@ bool CEP::delEvent(size_t index)
 		return false;
 	std::vector<CSharedCEPEventPtr>::iterator it = m_events.begin() + index;
 	bool res = epoll_ctl(m_epfd, EPOLL_CTL_DEL, (*it)->fd, NULL);
+	close((*it)->fd);
 	m_events.erase(it);
 	return res;
 }
@@ -115,6 +113,7 @@ bool CEP::delEvent(CEPEvent & cep_ev)
 {
 	bool res = epoll_ctl(m_epfd, EPOLL_CTL_DEL, cep_ev.fd, NULL);
 	cep_ev.canRemoveFromArray = true;
+	close(cep_ev.fd);
 	return res;
 }
 

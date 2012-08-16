@@ -36,17 +36,14 @@ void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * qu
 		case CEPEvent::Type_Recv:
 		{
 			if(cep_ev.len > 0)
-			{
 				cout<<"recv by fd "<< cep_ev.fd <<":["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
-				cep.modEvent(cep_ev, CEPEvent::Type_Send);
-			}
+			cep.modEvent(cep_ev, CEPEvent::Type_Send);
 		}
 		break;
 		case CEPEvent::Type_Send:
 		{
 			if(cep_ev.len > 0)
 				cout<<"sended by fd "<< cep_ev.fd << ":["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
-			
 			cep.delEvent(cep_ev);
 		}
 		break;
