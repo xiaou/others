@@ -31,13 +31,16 @@ void callback(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epo
 		break;
 		case CEPEvent::Type_Send:
 		{
-			//if(cep_ev.len > 0)
+			if(cep_ev.len > 0)
 				cout<<"sended data:["<< cep_ev.buf() << "]len = "<<cep_ev.len<<endl;
+			cep.modEvent(cep_ev, CEPEvent::Type_Recv);
 		}
 		break;
 		case CEPEvent::Type_Recv:
 		{
-			
+			if(cep_ev.len > 0)
+				cout<<"recv data:["<< cep_ev.sharedBuffer << "]len="<<cep_ev.len<<endl;
+			cep.delEvent(cep_ev);
 		}
 		break;
 		default:
@@ -75,7 +78,7 @@ int main()
 			}
 			else
 			{
-				cout<<"connect error."<<endl;
+				cout<<"connect error. error("<<errno<<"):"<<strerror(errno)<<endl;
 				return -1;
 			}
 		}
@@ -89,8 +92,11 @@ int main()
 		}
 	}
 	
-	if(cep.runloop_epoll_wait() == -1)
+	int res = cep.runloop_epoll_wait();
+	if(res == -1)
 		cout<<"CEP::runloop_epoll_wait() failed!" <<endl;
+	else
+		cout<<"CEP::runloop_epoll_wait() return "<< res <<endl;
 	
 	return 0;
 }

@@ -13,40 +13,41 @@ uint16_t g_port = 9011;
 
 void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epoll_wait)
 {
+	if(!handledSuccess)
+		return;
+		
 	switch(cep_ev.type)
 	{
 		case CEPEvent::Type_Listen:
 		{
-			if(handledSuccess)
-			{
-				if(cep_ev.newClientFd == -1)
-					return;
-				
-				cout<<"new client connect.fd ="<<cep_ev.newClientFd<<".by listen fd:"<<cep_ev.fd<<endl;
+			if(cep_ev.newClientFd == -1)
+				return;
+			
+			cout<<"new client connect.fd ="<<cep_ev.newClientFd<<".by listen fd:"<<cep_ev.fd<<endl;
 
-				CEPEvent cep_ev_recv(cep_ev.newClientFd, CEPEvent::Type_Recv, callback4cepev);
-				if(!cep.addEvent(cep_ev_recv))
-				{
-					cout<<"CEP::addEvent() wrong!"<<endl;
-					exit(-1);
-				}	
-			}
-			else
+			CEPEvent cep_ev_recv(cep_ev.newClientFd, CEPEvent::Type_Recv, callback4cepev);
+			if(!cep.addEvent(cep_ev_recv))
 			{
-				cout<< "wrong when accept()" <<endl;
-			}
+				cout<<"CEP::addEvent() wrong!"<<endl;
+				exit(-1);
+			}	
 		}
 		break;
 		case CEPEvent::Type_Recv:
 		{
-			if(cep_ev.len < 0)
-			{
-				cout<<"wrong in recv event"<<endl;
-			}
-			else if(cep_ev.len > 0)
+			if(cep_ev.len > 0)
 			{
 				cout<<"recv by fd "<< cep_ev.fd <<":["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
+				cep.modEvent(cep_ev, CEPEvent::Type_Send);
 			}
+		}
+		break;
+		case CEPEvent::Type_Send:
+		{
+			if(cep_ev.len > 0)
+				cout<<"sended by fd "<< cep_ev.fd << ":["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
+			
+			cep.delEvent(cep_ev);
 		}
 		break;
 		default:
@@ -99,6 +100,8 @@ int main()
 	
 	if(rtn == -1)
 		cout<< "CEP::runloop_epoll_wait() failed!" <<endl;
+	else 
+		cout<< "CEP::runloop_epoll_wait() return "<<rtn<<endl;
 
 	//
 	close(listenfd);
