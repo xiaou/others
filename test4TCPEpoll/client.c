@@ -25,22 +25,27 @@ void callback(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epo
 		{
 			char * buf = cep_ev.buf();
 			assert(buf);
-			cep_ev.len = 1 + snprintf(buf, cep_ev.bufsize(), "this is buffer of client fd %d", cep_ev.fd);
+			cep_ev.len = 1 + snprintf(buf, cep_ev.bufsize(), "this is buffer of client fd %d", cep_ev.fd);			
 			cep.modEvent(cep_ev, CEPEvent::Type_Send);
 		}
 		break;
 		case CEPEvent::Type_Send:
 		{
 			if(cep_ev.len > 0)
-				cout<<"sended data:["<< cep_ev.buf() << "]len = "<<cep_ev.len<<endl;
+				cout<<"sended data:["<< cep_ev.buf() << "]len = "<<cep_ev.len<<endl;			
 			cep.modEvent(cep_ev, CEPEvent::Type_Recv);
 		}
 		break;
 		case CEPEvent::Type_Recv:
 		{
+			cout<<"Type_Recv came. cep_ev.len = "<<cep_ev.len<<endl;
 			if(cep_ev.len > 0)
 				cout<<"recv data:["<< cep_ev.sharedBuffer << "]len="<<cep_ev.len<<endl;
-			cep.delEvent(cep_ev);
+			else if(cep_ev.len < 0)
+			{
+				cout<<"recv data len < 0~ may be 心跳断了 ？～～"<<endl;
+				cep.delEvent(cep_ev);
+			}
 		}
 		break;
 		default:
@@ -51,9 +56,9 @@ void callback(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epo
 int main()
 {
 	bool b;
-	CEP cep;
+	CEP cep(0);
 
-	const size_t nConn(2);
+	const size_t nConn(1);
 	int fds[nConn];
 
 	struct sockaddr_in addr;
@@ -69,13 +74,24 @@ int main()
 			return -1;
 		
 		CEP::SetNonBlocking(fds[i]);
+		
+		//set tcp keepalive
+		if(!CEP::SetKeepAlive(fds[i], 5, 2, 4))
+		{	
+			cout<<"CEP::SetKeepAlive() failed"<<endl;
+			exit(-1);
+		}
+		
 		if(connect(fds[i], (struct sockaddr *)&addr, sizeof addr) == -1)
 		{
 			if(errno == EINPROGRESS)
 			{//add connect event:	
 				cout<<"add Type_Connect CEPEvent."<<endl;
 				b = cep.addEvent(CEPEvent(fds[i], CEPEvent::Type_Connect, callback));
-				assert(b);
+				if(!b)
+				{
+					cout<<"add faild.may be server can't reach."<<endl;
+				}
 			}
 			else
 			{

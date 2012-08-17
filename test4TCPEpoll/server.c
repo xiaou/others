@@ -80,7 +80,7 @@ int main()
 		cout << "fd("<<listenfd<<")"<<"listen in " << g_port << endl;
 	
 	//epoll~
-	CEP cep;
+	CEP cep(120);
 	//cep.setMaximumNumberFilesOpened(1000*1000);
 	CEPEvent cep_ev(listenfd, CEPEvent::Type_Listen, callback4cepev);
 

@@ -6,6 +6,7 @@
 #include <sys/resource.h>
 #include <time.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>//for TCP KeepAlive.
 #include <arpa/inet.h>
 #include <errno.h>
 #include <signal.h>
@@ -22,18 +23,8 @@ CEP::CEP(size_t maxConnTimeout) :m_maxConnTimeout(maxConnTimeout)
 
 bool CEP::checkEventSocket(CEPEvent & cep_ev)
 {
-	int optval;
-	socklen_t optlen = sizeof optval;
-	if(getsockopt(cep_ev.fd, SOL_SOCKET, SO_ERROR, &optval, &optlen) != 0)
-	{
-		std::cerr<<"getsockopt() faild.error["<<errno<<"]:"<<strerror(errno)<<std::endl;
+	if(CEP::SocketIsError(cep_ev.fd))
 		return false;
-	}
-	if(optval != 0)
-	{
-		std::cerr<<"wrong socket."<<std::endl;
-		return false;
-	}
 	if(fcntl(cep_ev.fd, F_GETFL, 0) & O_NONBLOCK)
 		return true;
 	else
@@ -195,7 +186,10 @@ void CEP::checkTimeAndRemove()
 			m_checkPos -= 1;
 			continue;
 		}
-			  	
+			 
+		if(m_maxConnTimeout == 0)
+			continue;
+		
 		int fd;
 		if(m_events[m_checkPos]->type != CEPEvent::Type_Listen)// doesn't check listen fd  
 		{
@@ -215,32 +209,47 @@ void CEP::checkTimeAndRemove()
 
 void CEP::handleEvent(CEPEvent & cep_ev, uint32_t epoll_event_events, bool * quit_epoll_wait)
 {
+	if(epoll_event_events & EPOLLRDHUP 
+	|| epoll_event_events & EPOLLERR
+	|| epoll_event_events & EPOLLHUP
+	)
+	{//可能是心跳断了. 本地实测心跳断了导致ERR和HUP，但据说心跳断了会在recv里返回-1而这里不会有任何事件. 
+	 //然而不管如何,这些个事件肯定足够值得我close掉它了.
+		delEvent(cep_ev);
+		return;
+	}
+	
 	switch(cep_ev.type)
 	{
 		case CEPEvent::Type_Connect:
-		#if 0 //test
-		if(epoll_event_events & EPOLLRDHUP)
-			cout<<"EPOLLRDHUP fd = "<<cep_ev.fd<<endl;
-		if(epoll_event_events & EPOLLERR)
-			cout<<"EPOLLERR fd = "<<cep_ev.fd<<endl;
-		if(epoll_event_events & EPOLLHUP)
-			cout<<"EPOLLHUP fd = "<<cep_ev.fd<<endl;
-		if(epoll_event_events & EPOLLONESHOT)
-			cout<<"EPOLLONESHOT fd = "<<cep_ev.fd<<endl;
-		#endif
 			if(epoll_event_events & EPOLLOUT)//may be 还有EPOLLONESHOT ?
 				handleEvent4TypeConnect(cep_ev, quit_epoll_wait);
 			break;
 		case CEPEvent::Type_Listen:
-			if(epoll_event_events == EPOLLIN)
+			if(epoll_event_events & EPOLLIN)
 				handleEvent4TypeListen(cep_ev, quit_epoll_wait);
 			break;
 		case CEPEvent::Type_Send:
-			if(epoll_event_events == EPOLLOUT)
+			if(epoll_event_events & EPOLLOUT)
 				handleEvent4TypeSend(cep_ev, quit_epoll_wait);
 			break;
 		case CEPEvent::Type_Recv:
-			if(epoll_event_events == EPOLLIN)
+			#if 0 //test
+			if(epoll_event_events & EPOLLRDHUP)
+				cout<<"EPOLLRDHUP fd = "<<cep_ev.fd<<endl;
+			if(epoll_event_events & EPOLLERR)
+				cout<<"EPOLLERR fd = "<<cep_ev.fd<<endl;
+			if(epoll_event_events & EPOLLHUP)
+				cout<<"EPOLLHUP fd = "<<cep_ev.fd<<endl;
+			if(epoll_event_events & EPOLLONESHOT)
+				cout<<"EPOLLONESHOT fd = "<<cep_ev.fd<<endl;
+			//
+			if(epoll_event_events & EPOLLOUT)
+				cout<<"EPOLLOUT fd = "<<cep_ev.fd<<endl;
+			if(epoll_event_events & EPOLLIN)
+				cout<<"EPOLLIN fd = "<<cep_ev.fd<<endl;
+			#endif
+			if(epoll_event_events & EPOLLIN)
 				handleEvent4TypeRecv(cep_ev, quit_epoll_wait);
 			break;
 	}
@@ -321,7 +330,7 @@ ssize_t	CEP::Recvn(int fd, char *buf, size_t bufsize)
 		} 
 		else if (nread == 0) //EOF. recv all.
 			break;
-			
+		
 		nleft -= nread;
 		ptr   += nread;
 	}
@@ -344,7 +353,7 @@ ssize_t	CEP::Sendn(int fd, char *buf, size_t len)
 				nsend = 0;		
 			else if(errno == EAGAIN || errno == EWOULDBLOCK)//send all can send.
 				break;
-			else //some error.
+			else //sbool CheckSocketError(int sockfd);ome error.
 				return -1;
 		} 	
 		else if(nsend == 0) 
@@ -361,6 +370,18 @@ bool CEP::SetNonBlocking(int sockfd)
 	return (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0)|O_NONBLOCK) != -1);
 }
 
+bool CEP::SocketIsError(int sockfd)
+{
+	int optval;
+	socklen_t optlen = sizeof optval;
+	if(getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) != 0)
+	{
+		std::cerr<<"getsockopt() faild.error["<<errno<<"]:"<<strerror(errno)<<std::endl;
+		return true;
+	}
+	return optval != 0;
+}
+
 bool CEP::SetMaximumNumberFilesOpened(size_t num)
 {
 	struct rlimit rt;
@@ -373,3 +394,66 @@ bool CEP::SetMaximumNumberFilesOpened(size_t num)
 	}
 	return true;
 }
+
+bool CEP::SetKeepAlive(int sockfd, size_t tcp_keepalive_time, size_t tcp_keepalive_intvl, size_t tcp_keepalive_probes)
+{
+	if(CEP::SocketIsError(sockfd))
+		return false;
+		
+	int optval;
+	socklen_t optlen = sizeof optval;
+	
+	//is tcp?
+	if(getsockopt(sockfd, SOL_SOCKET, SO_TYPE, &optval, &optlen) != 0)
+	{
+		std::cerr<<"getsockopt() faild.error["<<errno<<"]:"<<strerror(errno)<<std::endl;
+		return false;
+	}
+	if(optval != SOCK_STREAM)
+		return false;//not tcp.
+		
+	//
+	if(getsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, &optlen) != 0)
+	{
+		std::cerr<<"getsockopt() faild.error["<<errno<<"]:"<<strerror(errno)<<std::endl;
+		return false;
+	}
+	if(optval == 0)
+	{
+		optval = 1;
+		if(setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) != 0)
+		{
+			std::cerr<<"setsockopt() faild.error["<<errno<<"]:"<<strerror(errno)<<std::endl;
+			return false;
+		}
+	}
+	
+	//now set params
+	bool res(true);
+	if(optval = tcp_keepalive_time)
+		res = res && (setsockopt(sockfd, SOL_TCP, TCP_KEEPIDLE, &optval, optlen) == 0);
+	if(optval = tcp_keepalive_intvl)
+		res = res && (setsockopt(sockfd, SOL_TCP, TCP_KEEPINTVL, &optval, optlen) == 0);
+	if(optval = tcp_keepalive_probes)
+		res = res && (setsockopt(sockfd, SOL_TCP, TCP_KEEPCNT, &optval, optlen) == 0);
+		
+	#if 1
+	getsockopt(sockfd, SOL_TCP, TCP_KEEPIDLE, &optval, &optlen);
+	cout<<"心跳检查时间周期："<<optval<<endl;
+	getsockopt(sockfd, SOL_TCP, TCP_KEEPINTVL, &optval, &optlen);
+	cout<<"心跳探测超时时间:"<<optval<<endl;
+	getsockopt(sockfd, SOL_TCP, TCP_KEEPCNT, &optval, &optlen);
+	cout<<"心跳探测一次的心跳包数量:"<<optval<<endl;
+	#endif
+	
+	return res;
+}
+
+
+
+
+
+
+
+
+

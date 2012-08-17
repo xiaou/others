@@ -23,7 +23,7 @@ const LOGLEVEL	LOG_LEVEL_DEBUG = log4cplus::DEBUG_LOG_LEVEL;
  * @note 如果不调用这个函数，那么默认是参数(true, 0, 0)的调用.
  * @param[in] level 日志输出级别.只有高于等于此级别的日志才被输出.(NULL means log all).
  * @param[in] toFile 是否把日志输出到文件.
- * @param[in] path 日志存储路径文件夹。支持相对路径与绝对路径.(NULL则为程序所在路径下的log目录，没有则创建.不支持"~"这种路径.)
+ * @param[in] path 日志存储路径文件夹。支持相对路径(支持"~"这种路径)与绝对路径.(NULL则为程序所在路径下的log目录.没有则创建.)
  * @param[in] fileNamePrefix 日志文件的名称前缀.(NULL则为"log",eg:log_error.txt).
  */
 void LOG_GLOBAL_INIT(LOGLEVEL level, bool toFile, const char * path, const char * fileNamePrefix);
