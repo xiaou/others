@@ -1,3 +1,13 @@
+/**
+ * @file LOG.h
+ * @brief 日志工具.
+ * @author xiaoU.
+ * @date 2012 E.O.W.
+ * @version 2.01
+ * @par 修改记录：
+ *	-2.01:支持"~"路径.
+ */
+
 #ifndef _LOG_H_
 #define _LOG_H_
 

@@ -121,33 +121,6 @@ server/fast:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
 .PHONY : server/fast
 
-CEP.o: CEP.cpp.o
-.PHONY : CEP.o
-
-# target to build an object file
-CEP.cpp.o:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/CEP.cpp.o
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/CEP.cpp.o
-.PHONY : CEP.cpp.o
-
-CEP.i: CEP.cpp.i
-.PHONY : CEP.i
-
-# target to preprocess a source file
-CEP.cpp.i:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/CEP.cpp.i
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/CEP.cpp.i
-.PHONY : CEP.cpp.i
-
-CEP.s: CEP.cpp.s
-.PHONY : CEP.s
-
-# target to generate assembly for a file
-CEP.cpp.s:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/CEP.cpp.s
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/CEP.cpp.s
-.PHONY : CEP.cpp.s
-
 client.o: client.c.o
 .PHONY : client.o
 
@@ -206,9 +179,6 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... server"
-	@echo "... CEP.o"
-	@echo "... CEP.i"
-	@echo "... CEP.s"
 	@echo "... client.o"
 	@echo "... client.i"
 	@echo "... client.s"

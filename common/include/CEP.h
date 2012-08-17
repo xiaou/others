@@ -1,11 +1,11 @@
 /**
- * @file UDebug.h
+ * @file CEP.h
  * @brief epoll ET模式封装.
  * @note  1. need kernel 2.6.9
  * @warning no warning I think.
  * @author xiaoU.
  * @date 2012 E.O.W.
- * @version 1.5
+ * @version 1.51
  * @par 修改记录：
  * 	-1.5:考虑加了心跳的套接字.handleEvent里检测events是否为EPOLLERR等，如果是，delEvent.
  * 

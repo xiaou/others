@@ -1,5 +1,5 @@
 #include "CEP.h"
-#include "LOG.H"
+#include "LOG.h"
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
