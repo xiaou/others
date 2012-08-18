@@ -5,15 +5,14 @@
  * @warning no warning I think.
  * @author xiaoU.
  * @date 2012 E.O.W.
- * @version 1.51
+ * @version 1.6
  * @par 修改记录：
+ * 	-1.6:加入心跳策略。俩构造函数，俩策略互斥.
  * 	-1.5:考虑加了心跳的套接字.handleEvent里检测events是否为EPOLLERR等，如果是，delEvent.
  * 
  *  TO DO(TODO):
  * 	未来优化记录：
- * 	1.去掉每次epoll_wait前寻坏检测超时时间，直接利用tcp心跳就行了.当前的代码已经支持在心跳断了就delEvent.
- * 	2.优化delEvent的逻辑(不循环，给CEPEvent加index字段).
- * 				anyway,反正就是别再搞循环这种耗时费力的事儿了.
+ * 	1.优化delEvent的逻辑(不循环，给CEPEvent加index字段).反正就是别再搞循环这种耗时费力的事儿了.
  * 
  * 	-1.3:加入设置 tcp keepalive的帮助函数.但是暂时没有在类的内部使用.
  *  -1.2:构造函数增加参数timeout.
@@ -124,7 +123,18 @@ private:
 class CEP
 {
 public:
-	CEP(size_t maxConnTimeout = 0); /**< maxConnTimeout is timeout. see \c m_maxConnTimeout .如果为0则不检测超时. */
+	/*
+	 * maxConnTimeout is timeout. see \c m_maxConnTimeout .如果为0则不检测超时.
+	 * 用了这个构造函数无论参数如何，在添加事件的时候将不自动设置套接子的tcp心跳.因为俩构造函数是两种超时策略，两策略只取一种.
+	 */
+	CEP(size_t maxConnTimeout = 0); 
+	/* 
+	 * 设置心跳.如果setKeepAlive = false，后面的参数将无意义.
+	 * 后面三个参数意义请 see \c CEP::SetKeepAlive .
+	 * 用了这个构造函数那么m_maxConnTimeout就等于0. CEP(0)实际等效于CEP(0,0,0,0)
+	 */
+	CEP(bool setKeepAlive, size_t keepalive_time, size_t keepalive_intvl, size_t keepalive_probes);
+	
 	virtual ~CEP(){ close(m_epfd); }
 	
 	virtual bool addEvent(CEPEvent cep_ev);
@@ -164,8 +174,8 @@ public:
 	bool setMaximumNumberFilesOpened(size_t num){ return CEP::SetMaximumNumberFilesOpened(num); }
 	bool socketIsError(int sockfd){ return CEP::SocketIsError(sockfd); }
 	bool setNonBlocking(int sockfd){ return CEP::SetNonBlocking(sockfd); }
-	//bool setKeepAlive(int sockfd, int tcp_keepalive_time = 7200, int tcp_keepalive_intvl = 20, int tcp_keepalive_probes = 4)
-	//{ return CEP::SetKeepAlive(sockfd, tcp_keepalive_time, tcp_keepalive_intvl, tcp_keepalive_probes); }
+	bool setKeepAlive(int sockfd, int tcp_keepalive_time = 0, int tcp_keepalive_intvl = 0, int tcp_keepalive_probes = 0)
+	{ return CEP::SetKeepAlive(sockfd, tcp_keepalive_time, tcp_keepalive_intvl, tcp_keepalive_probes); }
 	ssize_t	recvn(int fd, char *buf, size_t bufsize){ return CEP::Recvn(fd, buf, bufsize); }
 	ssize_t	sendn(int fd, char *buf, size_t len){ return CEP::Sendn(fd, buf, len); }
 	
@@ -173,7 +183,8 @@ public:
 protected:
 	virtual bool setEvent4epoll_event(CEPEvent & cep_ev, int epoll_ctl_op);
 	virtual void checkTimeAndRemove();
-	virtual bool checkEventSocket(CEPEvent & cep_ev);/**< 检查CEPEvent::fd套接字的SO_ERROR选项，并确保O_NONBLOCK. */
+	virtual bool checkEventSocket(CEPEvent & cep_ev);/**< 检查CEPEvent::fd套接字的SO_ERROR选项.
+	确保设置(了)O_NONBLOCK.  如果构造函数使用的是心跳超时策略并且不是CEPEvent::Type_Listen型的事件,就会确保套接字设置(了)心跳.*/
 	virtual void handleEvent(CEPEvent & cep_ev, uint32_t epoll_event_events, bool * quit_epoll_wait);
 	virtual void handleEvent4TypeConnect(CEPEvent & cep_ev, bool * quit_epoll_wait);
 	virtual void handleEvent4TypeListen(CEPEvent & cep_ev, bool * quit_epoll_wait);
@@ -184,6 +195,10 @@ protected:
 	std::vector<CSharedCEPEventPtr> m_events;
 	size_t m_checkPos;
 	size_t m_maxConnTimeout;/**< seconds. 如果客户连接这么久没任何数据到来，就认为超时了,会关掉连接.如果为0则不检测超时. */
+	bool m_keepalive;
+	size_t m_keepalive_time;
+	size_t m_keepalive_intvl;
+	size_t m_keepalive_probes;
 };
 
 #endif // #ifndef _CEP_H_

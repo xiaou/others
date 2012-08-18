@@ -3,4 +3,5 @@
 
 CMakeFiles/server.dir/server.c.o
  ../../common/include/CEP.h
+ ../../common/include/LOG.h
  /home/spring/myGits/others/test4TCPEpoll/server.c

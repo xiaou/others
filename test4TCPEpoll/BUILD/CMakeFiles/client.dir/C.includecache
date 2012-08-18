@@ -6,3 +6,33 @@
 
 #IncludeRegexTransform: 
 
+../../common/include/CEP.h
+netinet/in.h
+-
+unistd.h
+-
+string.h
+-
+stdlib.h
+-
+iostream
+-
+vector
+-
+tr1/memory
+-
+
+/home/spring/myGits/others/test4TCPEpoll/client.c
+CEP.h
+/home/spring/myGits/others/test4TCPEpoll/CEP.h
+arpa/inet.h
+-
+iostream
+-
+errno.h
+-
+assert.h
+-
+stdio.h
+-
+
