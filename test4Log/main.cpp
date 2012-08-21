@@ -10,10 +10,12 @@
 #include <errno.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include "LOG.H"
+#include "LOG.h"
 
 
 using namespace std;
+
+char g_buf[] = "1234";
 
 
 void atExit(void)
@@ -43,18 +45,17 @@ void signalChild(int signum)
 	cout<<"end signalChild()."<<endl;
 }
 
+class C
+{
+public:
+	string s[4];
+};
+
 int main()
 {
-const char * s = "../../";
-DIR * dir  = opendir(s);
-if(dir == NULL)
-	printf("open [%s] faild\n error(%d):%s\n", s, errno, strerror(errno));
-return 0;
+char buf[4];
 
-LOG_GLOBAL_INIT(0, true, "~/work", "te");
-
-LOG_DEBUG("cccc");
-
+snprintf(buf, 0, "xxoo");
 
 return 0;
 	signal(SIGCHLD, signalChild);

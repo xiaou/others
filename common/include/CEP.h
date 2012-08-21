@@ -5,14 +5,14 @@
  * @warning no warning I think.
  * @author xiaoU.
  * @date 2012 E.O.W.
- * @version 1.6
+ * @version 1.74
  * @par 修改记录：
- * 	-1.6:加入心跳策略。俩构造函数，俩策略互斥.
- * 	-1.5:考虑加了心跳的套接字.handleEvent里检测events是否为EPOLLERR等，如果是，delEvent.
+ * 	-1.73:
  * 
- *  TO DO(TODO):
+ *  TO DO....TODO:
  * 	未来优化记录：
- * 	1.优化delEvent的逻辑(不循环，给CEPEvent加index字段).反正就是别再搞循环这种耗时费力的事儿了.
+ * 	1.优化delEvent的逻辑.看能不能不搞循环这种耗时费力的事儿了.
+ * 	2.粘包的问题.这个目前的业务逻辑实际不会发生.为了健壮性以后可以这样优化：recv的时候头两位作为数据包长度.(已局部测试，此法有效.)
  * 
  * 	-1.3:加入设置 tcp keepalive的帮助函数.但是暂时没有在类的内部使用.
  *  -1.2:构造函数增加参数timeout.
@@ -51,11 +51,12 @@ public:
 	
 	enum Type
 	{
+		/**@note 这epoll的ET模式.本地测试发现：当你收到事件后，需要mod这个事件，否则这个事件可能会不能再收到事件消息. */
 		Type_Connect, /**< 连接成功或失败后调用回调函数。
-		无论成功失败，此事件仅一次(epoll_ctl之EPOLLONESHOT),此后会自动delEvent这个事件.除非你在回调函数里modEvent这个事件.*/
+		无论成功失败，此事件仅一次(epoll_ctl之EPOLLONESHOT),此后会自动delEvent这个事件.除非你在回调函数里modEvent这个事件(这也是客户代码的正常行为).*/
 		Type_Listen, /**< accept成功或失败后调用回调函数。newClientFd被赋值(即使回调的handledSuccess参数为true，newClientFd仍然需要判断是否为-1). */
-		Type_Send, /**< 成功或失败的发送完数据后调用回调函数.len为实际发送的长度.(可能为-1，此时handledSuccess参数为false.建议这时客户代码delEvent.因为八成fd已经坏了). */
-		Type_Recv, /**< 成功或失败的收完缓冲区里的全部数据后调用回调函数.len为实际收到的长度.(可能为-1，此时handledSuccess参数为false.建议这时客户代码delEvent.因为八成fd已经坏了). */
+		Type_Send, /**< 成功或失败的发送完数据后调用回调函数.len为实际发送的长度.(可能为-1，此时handledSuccess参数为false.建议这时客户代码delEvent.因为八成对端fd已经close了或者error了). */
+		Type_Recv, /**< 成功或失败的收完缓冲区里的全部数据后调用回调函数.len为实际收到的长度.(可能为-1，此时handledSuccess参数为false.建议这时客户代码delEvent.因为八成对端fd已经close了或者error了). */
 	} type;
     
     CEPEventDoneCallback callback;
@@ -70,11 +71,12 @@ private:
 	friend class CEP;   
 
 public:
-	///辅助函数而已:
+	///辅助函数:
 	//
 	inline char * buf(){ return sharedBuffer == NULL ? NULL : sharedBuffer.get(); }/**< the buffer size is MAXDATABUFSIZE. */
 	inline size_t bufsize(){ return sharedBuffer == NULL ? 0 : MAXDATABUFSIZE; }
 	inline void coutthis(){ std::cout<<this<<std::endl; }
+	inline void coutCanRemove(){ std::cout<<"canRemoveFromArray="<<canRemoveFromArray<<std::endl; }
 	
 	///constructor
 	//
@@ -138,9 +140,9 @@ public:
 	virtual ~CEP(){ close(m_epfd); }
 	
 	virtual bool addEvent(CEPEvent cep_ev);
-	virtual bool modEvent(CEPEvent & cep_ev);/**< @note mod事件如果失败会自动从数组里移除这个事件. */
+	virtual bool modEvent(CEPEvent & cep_ev);/**< @note mod事件如果失败会自动delEvent. */
 	virtual bool modEvent(CEPEvent & cep_ev, CEPEvent::Type newType){ cep_ev.type = newType; return modEvent(cep_ev); }
-	virtual bool delEvent(CEPEvent & cep_ev);/**< 删除epoll事件并close事件的fd，稍后将从数组里移除并. */
+	virtual bool delEvent(CEPEvent & cep_ev);/**< 删除epoll事件并close事件的fd，稍后将从数组里移除. */
 	virtual bool delEvent(size_t index);/**< 删除epoll事件并close事件的fd，并马上从数组里移除. */
 	virtual int runloop_epoll_wait();/**< @retval -1 error. @retval 0 the array is empty. @retval 1 user let the loop return. */
 	
@@ -171,7 +173,6 @@ public:
 	/** sendn */
 	static ssize_t	Sendn(int fd, char *buf, size_t len);
 	//
-	bool setMaximumNumberFilesOpened(size_t num){ return CEP::SetMaximumNumberFilesOpened(num); }
 	bool socketIsError(int sockfd){ return CEP::SocketIsError(sockfd); }
 	bool setNonBlocking(int sockfd){ return CEP::SetNonBlocking(sockfd); }
 	bool setKeepAlive(int sockfd, int tcp_keepalive_time = 0, int tcp_keepalive_intvl = 0, int tcp_keepalive_probes = 0)

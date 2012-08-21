@@ -32,8 +32,9 @@ void callback(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epo
 		case CEPEvent::Type_Send:
 		{
 			if(cep_ev.len > 0)
-				cout<<"sended data:["<< cep_ev.buf() << "]len = "<<cep_ev.len<<endl;			
-			cep.modEvent(cep_ev, CEPEvent::Type_Recv);
+				cout<<"sended data:["<< cep_ev.buf() << "]len = "<<cep_ev.len<<endl;	
+			//usleep(1000*1000);		
+			cep.modEvent(cep_ev, CEPEvent::Type_Send);
 		}
 		break;
 		case CEPEvent::Type_Recv:
@@ -74,13 +75,6 @@ int main()
 			return -1;
 		
 		CEP::SetNonBlocking(fds[i]);
-		
-		//set tcp keepalive
-		if(!CEP::SetKeepAlive(fds[i], 5, 2, 4))
-		{	
-			cout<<"CEP::SetKeepAlive() failed"<<endl;
-			exit(-1);
-		}
 		
 		if(connect(fds[i], (struct sockaddr *)&addr, sizeof addr) == -1)
 		{

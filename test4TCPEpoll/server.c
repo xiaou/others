@@ -13,9 +13,12 @@ uint16_t g_port = 9010;
 
 void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * quit_epoll_wait)
 {
-	if(!handledSuccess)
+	if(!handledSuccess && cep_ev.type != CEPEvent::Type_Listen)
+	{
+		cep.delEvent(cep_ev);
 		return;
-		
+	}	
+
 	switch(cep_ev.type)
 	{
 		case CEPEvent::Type_Listen:
@@ -35,9 +38,9 @@ void callback4cepev(CEPEvent & cep_ev, CEP & cep, bool handledSuccess, bool * qu
 		break;
 		case CEPEvent::Type_Recv:
 		{
-			if(cep_ev.len > 0)
-				cout<<"recv by fd "<< cep_ev.fd <<":["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
-			cep.modEvent(cep_ev, CEPEvent::Type_Send);
+			cout<<"recv by fd "<< cep_ev.fd <<":["<<cep_ev.sharedBuffer<<"]len="<<cep_ev.len<<endl;
+
+			cep.modEvent(cep_ev, CEPEvent::Type_Recv);
 		}
 		break;
 		case CEPEvent::Type_Send:
@@ -80,7 +83,7 @@ int main()
 		cout << "fd("<<listenfd<<")"<<"listen in " << g_port << endl;
 	
 	//epoll~
-	CEP cep(120);
+	CEP cep(true, 5, 2, 1);
 	//cep.setMaximumNumberFilesOpened(1000*1000);
 	CEPEvent cep_ev(listenfd, CEPEvent::Type_Listen, callback4cepev);
 

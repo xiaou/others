@@ -3,7 +3,7 @@
  * @brief 日志工具.
  * @author xiaoU.
  * @date 2012 E.O.W.
- * @version 2.01
+ * @version 2.02
  * @par 修改记录：
  *	-2.01:支持"~"路径.
  */
@@ -44,41 +44,6 @@ void LOG_ERROR(const char * format, ...);
 void LOG_WARN(const char * format, ...);
 void LOG_INFO(const char * format, ...);
 void LOG_DEBUG(const char * format, ...);
-
-
-///当前工作目录切换到exe所在目录.出栈后回到原目录.
-class CDEXEDIR
-{
-	public:
-	CDEXEDIR()
-	{
-		char   exePath[PATH_MAX]; 
-		getcwd(currWorkPath, PATH_MAX);
-		getSelfEXEPath(exePath, PATH_MAX);
-		chdir(exePath);
-	}
-	~CDEXEDIR()
-	{
-		chdir(currWorkPath);
-	}
-	private:
-	char currWorkPath[PATH_MAX];
-	
-	ssize_t getSelfEXEPath(char * buf, size_t bufsiz)
-	{
-   		ssize_t ret = readlink("/proc/self/exe", buf, bufsiz);
-    	if(ret != -1)
-    	{
-        	for(int i = strlen(buf); i != 0; i--)   
-        	    if(buf[i-1] == '/')
-        	    {
-        	        buf[i-1] = 0;
-        	        break;
-        	    }
-    	}
-    	return ret;
-    }
-};
 
 #endif
 
