@@ -53,9 +53,25 @@ public:
 
 int main()
 {
-char buf[4];
+vector<int> arr, arr2;
+arr.push_back(1);
+arr.push_back(2);
 
-snprintf(buf, 0, "xxoo");
+for(vector<int>::iterator it = arr.begin(); it != arr.end(); it++  )
+	cout<<" "<<*it;
+cout<<endl<<endl;;
+
+arr2.assign(arr.begin(), arr.begin()+1);
+
+for(vector<int>::iterator it = arr2.begin(); it != arr2.end(); it++  )
+	cout<<" "<<*it;
+cout<<endl<<endl;
+
+arr.erase(arr.begin(), arr.begin()+1);
+
+for(vector<int>::iterator it = arr.begin(); it != arr.end(); it++  )
+	cout<<" "<<*it;
+cout<<endl<<endl;;
 
 return 0;
 	signal(SIGCHLD, signalChild);
