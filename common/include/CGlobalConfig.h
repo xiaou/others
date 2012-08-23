@@ -8,7 +8,8 @@
 
 
 //全局配置文件.绝对路径.
-static const char * g_configFilePath = "/home/spring/work/APNs4MOA/bin/global.conf"; 
+static const char * g_configFilePath = "~/work/APNs4MOA/bin/global.conf"; 
+
 
 //声明.(#include "common.h")
 char * GetConfKeyString(const char*, const char*, const char*, char*, size_t);
@@ -24,6 +25,8 @@ public:
         return &gcf;  
     }  
     
+	const char * getConfigFile(){ return g_configFilePath; }
+
 	char * getStrValue(const char * title, const char * key, char * buf, size_t bufsize)
 	{
 		return GetConfKeyString(title, key, g_configFilePath, buf, bufsize);

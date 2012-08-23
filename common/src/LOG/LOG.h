@@ -3,12 +3,9 @@
  * @brief 日志工具.
  * @author xiaoU.
  * @date 2012 E.O.W.
- * @version 2.03
+ * @version 2.06
  * @par 修改记录：
- * 
- * 	TODO....TO DO
- *  程序运行中如果删掉日志文件或内容，就不能再创建或写日志了，除非重新打开程序.日后优化.
- * 
+ *	-2.04:修复删掉日志文件后不再输出日志的bug.支持配置文件里LOGLEVEL=LOG_LEVEL_XXX来控制输出. 
  *	-2.01:支持"~"路径.
  */
 
@@ -41,6 +38,12 @@ const LOGLEVEL	LOG_LEVEL_DEBUG = log4cplus::DEBUG_LOG_LEVEL;
  * @param[in] fileNamePrefix 日志文件的名称前缀.(NULL则为"log",eg:log_error.txt).
  */
 void LOG_GLOBAL_INIT(LOGLEVEL level, bool toFile, const char * path, const char * fileNamePrefix);
+/*
+ * @brief 与上面的函数不同的是，这个可以动态的修改输出日志的级别.
+ *  通过查看配置文件里的"LOGLEVEL="后面的值,如:LOGLEVEL=LOG_LEVEL_NOLOG(只支持上面define的LOG_LEVEL_XXX这些值)
+ * @param[in] levelConfigFilePath 配置文件的路径(支持相对路径、绝对路径和~. 建议使用绝对路径和~).
+ */
+void LOG_GLOBAL_INIT(LOGLEVEL level, const char * levelConfigFilePath, bool toFile, const char * path, const char * fileNamePrefix);
 
 /** note:一条日志输入的字节数是有限制的，超出限制将在末尾添加特殊省略号了事儿. */
 void LOG_FATAL(const char * format, ...);

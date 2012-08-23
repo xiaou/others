@@ -14,7 +14,14 @@ char *GetConfKeyString(const char *title, const char *key, const char *filename,
     int i = 0;   
     int flag = 0;   
     char *tmp;  
-  
+
+	char path[1024];
+	if(filename[0] == '~')
+	{
+		snprintf(path, 1024, "%s/%s", getenv("HOME"), &filename[1]);
+		filename = path;
+  	}
+
     if((fp = fopen(filename, "r")) == NULL)   
     {   
         printf("have   no   such   file \n");  
@@ -48,7 +55,7 @@ char *GetConfKeyString(const char *title, const char *key, const char *filename,
                     if ('#' == szLine[0])  
                     {  
                     }  
-                    else if ( '/' == szLine[0] && '/' == szLine[1] )  
+                    else if ( '\/' == szLine[0] && '\/' == szLine[1] )  
                     {  
                           
                     }  
