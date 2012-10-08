@@ -1,4 +1,4 @@
-
+#include <string.h>
 #include <iostream>
 
 using namespace std;
@@ -6,6 +6,17 @@ using namespace std;
 
 int main()
 {
+	string str = "";
+	const char * p = str.c_str();
+	if(p)
+	{
+		cout << p << endl;
+		cout << strlen(p) << endl;
+		cout << strlen(NULL) << endl;
+	}
+
+	return 0;
+
 string s;
 
 cout << s.length() << endl;

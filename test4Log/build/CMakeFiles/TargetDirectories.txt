@@ -1,1 +1,0 @@
-/home/xiaou/myGits/others/test4Log/build/CMakeFiles/test.dir
