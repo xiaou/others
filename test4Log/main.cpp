@@ -3,19 +3,16 @@
 
 using namespace std;
 
+void func(const string & str)
+{
+
+}
 
 int main()
 {
-	string str = "";
-	const char * p = str.c_str();
-	if(p)
-	{
-		cout << p << endl;
-		cout << strlen(p) << endl;
-		cout << strlen(NULL) << endl;
-	}
 
-	return 0;
+//func();
+//return 0;
 
 string s;
 
@@ -32,8 +29,11 @@ s.resize(10);
 s += "yyjj";
 cout << s << endl;
 
-s = "";
-s.resize(1);
+//s = "";
+//s.resize(0);
+s.clear();
+cout << s.empty() << endl;
+cout << s.length() << endl;
 cout << s.capacity() << endl;
 
 cout << s.max_size() << endl;

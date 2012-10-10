@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/spring/myGits/others/test/main.cpp
+iostream
+-
+set
+-
+vector
+-
+tr1/memory
+-
+assert.h
+-
+
