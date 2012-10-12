@@ -1,32 +1,13 @@
 #include <iostream>
+#include <set>
 
 using namespace std;
 
-class CA
-{
-public:
-int m_i;
-CA(int i):m_i(i){ }
-~CA(){ cout << "m_i = " << m_i << " <-release already!" << endl; }
-};
-
 int main()
 {
-	void * p;
-	
-	{
-		int i(14);
-		p = &i;
-	}
-
-	cout << "wish not 14:" << *(int *)p << endl;
-
-	{
-		CA a(44);
-		p = &a;
-	}
-	
-	cout << "wish not 44:" << ((CA *)p)->m_i << endl;
+	set<int> iset;
+	set<int>::iterator it = iset.insert(4).first;
+	(*it)++;
 
 	return 0;
 }

@@ -1,35 +1,31 @@
 #include <iostream>
+//#include <tr1/memory>
 #include <set>
-#include <vector>
-#include <tr1/memory>
-#include <assert.h>
+//#include <vector>
 
-using namespace std;
+//using namespace std;
+//using std::tr1::shared_ptr;
 
-using std::tr1::shared_ptr;
 
-class CA
-{};
+template<class T>
+inline T & GetStdSetElement(std::_Rb_tree_const_iterator<T>  std_set_iterator)
+{
+	return *(T *)&(*std_set_iterator);
+}
+
 
 
 int main()
 {	
-	set<shared_ptr<CA> > s;
-	CA * p = new CA;
-	shared_ptr<CA> sh(p);
-	s.insert( sh );
-	s.insert(shared_ptr<CA>(new CA));
+	using namespace std;
+
+	set<int> iset;
+	pair< set<int>::iterator, bool> res = iset.insert(4);
 	
-	cout << s.size() << endl;
+	int * p = &GetStdSetElement(res.first);
+	(*p)++;
 	
-	shared_ptr<CA> tmp = sh;
-	s.erase( tmp );
-	//s.insert( tmp );
-	cout << s.size() << endl;
-	
-	
-	
-	
+	cout << *( iset.begin() ) << endl;
 	
 	return 0;
 }
