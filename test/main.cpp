@@ -1,31 +1,23 @@
 #include <iostream>
-//#include <tr1/memory>
+#include <tr1/memory>
 #include <set>
-//#include <vector>
+#include <vector>
 
-//using namespace std;
-//using std::tr1::shared_ptr;
-
-
-template<class T>
-inline T & GetStdSetElement(std::_Rb_tree_const_iterator<T>  std_set_iterator)
-{
-	return *(T *)&(*std_set_iterator);
-}
+using namespace std;
+using std::tr1::shared_ptr;
 
 
 
 int main()
 {	
-	using namespace std;
-
-	set<int> iset;
-	pair< set<int>::iterator, bool> res = iset.insert(4);
+	char sz[] = { '1', '\0', '2'};
+	cout << sz << endl;
 	
-	int * p = &GetStdSetElement(res.first);
-	(*p)++;
+	string s("4");
+	s.insert(1, sz, 3);
 	
-	cout << *( iset.begin() ) << endl;
+	cout << s.length() << endl;
+	cout << s    << endl;
 	
 	return 0;
 }

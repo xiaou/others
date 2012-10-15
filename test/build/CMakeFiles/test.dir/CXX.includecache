@@ -9,6 +9,10 @@
 /home/spring/myGits/others/test/main.cpp
 iostream
 -
+tr1/memory
+-
 set
+-
+vector
 -
 
