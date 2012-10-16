@@ -6,18 +6,20 @@
 using namespace std;
 using std::tr1::shared_ptr;
 
-
+class CA{ public: char m_szBuf[128]; };
 
 int main()
 {	
-	char sz[] = { '1', '\0', '2'};
-	cout << sz << endl;
+	CA a;
+	cout << sizeof a.m_szBuf << endl;
 	
-	string s("4");
-	s.insert(1, sz, 3);
+	return 0;
+
+	string xx = "oo";
+	const string & rr = xx;
 	
-	cout << s.length() << endl;
-	cout << s    << endl;
+	cout << rr << endl;
+	//rr.clear();//error~
 	
 	return 0;
 }
