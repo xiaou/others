@@ -2,24 +2,26 @@
 #include <tr1/memory>
 #include <set>
 #include <vector>
+#include <string.h>
+#include <assert.h>
+#include <stdint.h>
+
 
 using namespace std;
 using std::tr1::shared_ptr;
 
-class CA{ public: char m_szBuf[128]; };
+
+class CA{};
+
+
 
 int main()
 {	
-	CA a;
-	cout << sizeof a.m_szBuf << endl;
+	uint32_t maxUInt32 = 4294967295;
 	
-	return 0;
-
-	string xx = "oo";
-	const string & rr = xx;
+	maxUInt32 = 0xFFFFFFFF;
 	
-	cout << rr << endl;
-	//rr.clear();//error~
+	cout << maxUInt32 << endl;
 	
 	return 0;
 }
