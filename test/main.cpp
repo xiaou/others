@@ -1,6 +1,7 @@
 #include <iostream>
 #include <tr1/memory>
 #include <set>
+#include <map>
 #include <vector>
 #include <string.h>
 #include <assert.h>
@@ -11,17 +12,21 @@ using namespace std;
 using std::tr1::shared_ptr;
 
 
-class CA{};
-
+class CA
+{
+	vector<int> m_v;
+	
+	public:
+	CA()
+	{
+		cout << this->m_v.size() << endl;
+	}
+};
 
 
 int main()
 {	
-	uint32_t maxUInt32 = 4294967295;
-	
-	maxUInt32 = 0xFFFFFFFF;
-	
-	cout << maxUInt32 << endl;
+	CA a;
 	
 	return 0;
 }

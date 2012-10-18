@@ -13,6 +13,8 @@ tr1/memory
 -
 set
 -
+map
+-
 vector
 -
 string.h
