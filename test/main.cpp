@@ -6,27 +6,26 @@
 #include <string.h>
 #include <assert.h>
 #include <stdint.h>
+#include <arpa/inet.h>
 
 
 using namespace std;
 using std::tr1::shared_ptr;
 
 
-class CA
-{
-	vector<int> m_v;
-	
-	public:
-	CA()
-	{
-		cout << this->m_v.size() << endl;
-	}
-};
 
 
 int main()
 {	
-	CA a;
+	char s[4];
+	s[0] = 0;
+	s[1] = 0;
+	s[2] = 3;
+	s[3] = 177;
+
+	int  i = *(int *)s;
+	i = ntohl(i);
+	cout << i << endl;
 	
 	return 0;
 }
