@@ -1,4 +1,5 @@
-#! /bin/sh
+#! /bin/bash
+
 
 v1=val1
 r1=v1

@@ -1,28 +1,43 @@
 #! /bin/bash
 
-ARR=(1 2 3 4)
-ARR[4]=5
-len=
-echo ${ARR[@]}
-echo ${ARR[0]}
+ARR=$(cut -f1 -d: /etc/passwd | head -4)
+echo ${ARR[*]}
 
 echo
-for i in ${ARR[@]}; do
-	echo $i
+for entry in ${ARR[*]}; do
+	echo $entry '<--'
 done
 
 echo
-for((i=0;i!=3;i++)); do
-	echo ${ARR[${i}]}
+echo ${#ARR[*]}
+echo ${#ARR[0]}
+
+for((i=0;i!=2;i++)); do
+	echo '-->' ${ARR[${i}]}
 done
 
 echo
-unset ARR[*]
-echo ${#a}
-for entry in $(cut -f1,3 -d: /etc/passwd | head -10); do
-	ARR[ ${entry#*:}  ]=${entry%:*}
+i=5
+while [ $i -gt 0 ]; do
+	echo --- $i
+	i=$(($i - 1))
 done
-echo ${ARR[@]}
 
-echo ${#ARR}
+echo 
+until [ $i = 5 ]; do
+	echo --- $i
+	i=$(($i + 1))
+done
+
+echo
+i+=1
+case $i in
+	5) 
+		echo in case:i==5.
+		;;
+	*) 
+		echo in case:i!=5.
+		;;
+esac
+
 
