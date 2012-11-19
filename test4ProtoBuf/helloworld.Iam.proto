@@ -1,0 +1,8 @@
+package helloworld;
+message Iam
+{
+	required int32 id = 1; 
+	required string username = 2;
+	optional string str = 3;
+}
+
