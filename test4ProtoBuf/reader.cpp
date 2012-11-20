@@ -1,4 +1,4 @@
-#include "helloworld.Iam.pb.h"
+#include "helloworld.message/helloworld.Iam.pb.h"
 #include <fstream>
 #include <iostream>
 
@@ -16,10 +16,17 @@ int main()
 	}
 
 	cout << msg.id() << endl;
-	cout << msg.username() << endl;
+	cout << msg.name() << endl;
+	cout << helloworld::Iam::Sex_Name(msg.sex()) << endl;
+	for(int i = 0; i != msg.friends_size(); i++)
+		cout << msg.friends(i).name() << "\t" 
+		<< helloworld::Iam::Sex_Name(msg.friends(i).sex()) << endl;
+	
 	if(msg.has_str())
 		cout << msg.str() << endl;
-	
+	else // default value
+		cout << msg.str() << endl;
+
 	return 0;
 }
 

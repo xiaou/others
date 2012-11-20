@@ -1,0 +1,21 @@
+package helloworld;
+message Iam
+{
+	required int32 id = 1; 
+	required string name = 2;
+	enum Sex
+	{
+		WOMAN=0;
+		MAN=1;
+	}
+	required Sex sex = 3;
+	repeated Friend friends = 4;
+	optional string str = 5 [default = "xx00"];
+}
+
+message Friend
+{
+	required string name = 1;
+	required Iam.Sex sex = 2;
+}
+
