@@ -1,6 +1,7 @@
 #include "helloworld.message/helloworld.Iam.pb.h"
 #include <fstream>
 #include <iostream>
+#include "google/protobuf/descriptor.h"
 
 using namespace std;
 
@@ -14,6 +15,34 @@ int main()
 		cerr << "Failed to parse msg." << endl;
 		return -1;
 	}
+	
+	#if 1
+	const google::protobuf::Descriptor * descrip = msg.GetDescriptor();
+	cout << "\n" << descrip->name() << endl;
+	cout << descrip->full_name() << endl;
+	cout << descrip->index() << endl;
+	//cout << descrip->DebugString() << endl;
+	
+	const google::protobuf::FieldDescriptor * fieldDescrip = descrip->FindFieldByName("friends");
+	assert(fieldDescrip);
+	cout << "\n" << fieldDescrip->full_name() << endl;	
+	cout << fieldDescrip->DebugString() << endl;	
+	
+	assert( fieldDescrip->file() == descrip->file() );
+	
+	const google::protobuf::FileDescriptor * fileDescrip = descrip->file();
+	cout << "\n" << fileDescrip->name() << endl;
+	cout << fileDescrip->message_type_count() << endl;
+	assert( fileDescrip->message_type(0) == descrip );
+	cout << fileDescrip->message_type(1)->full_name() << endl;
+	
+	const google::protobuf::DescriptorPool * pool = fileDescrip->pool();
+	
+	
+	return 0;
+	#endif
+	
+	cout << "debug string:\n[" << msg.DebugString() << "]\n" << endl;
 
 	cout << msg.id() << endl;
 	cout << msg.name() << endl;

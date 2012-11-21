@@ -18,8 +18,11 @@ int main()
 	f->set_name("lily");
 	f->set_sex(helloworld::Iam::MAN);
 	
-	fstream output("./msg.txt", ios::out | ios::trunc | ios::binary);
+	string strBinary;
+	msg.SerializeToString(&strBinary);
+	cout << "will write [\n" << strBinary << "\n] to file." << endl; 
 
+	fstream output("./msg.txt", ios::out | ios::trunc | ios::binary);
 	if(!msg.SerializeToOstream(&output))
 	{
 		cerr << "Failed to write msg." << endl;
