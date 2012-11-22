@@ -17,7 +17,8 @@ int main()
 	}
 	
 	#if 1
-	const google::protobuf::Descriptor * descrip = msg.GetDescriptor();
+	const google::protobuf::Descriptor * descrip = helloworld::Iam::descriptor();
+	assert( descrip == msg.GetDescriptor() );
 	cout << "\n" << descrip->name() << endl;
 	cout << descrip->full_name() << endl;
 	cout << descrip->index() << endl;
@@ -34,10 +35,16 @@ int main()
 	cout << "\n" << fileDescrip->name() << endl;
 	cout << fileDescrip->message_type_count() << endl;
 	assert( fileDescrip->message_type(0) == descrip );
+	assert( fileDescrip->FindMessageTypeByName("Iam") == descrip );
 	cout << fileDescrip->message_type(1)->full_name() << endl;
 	
-	const google::protobuf::DescriptorPool * pool = fileDescrip->pool();
-	
+	cout << "\n" << endl;
+	const google::protobuf::DescriptorPool * pool = google::protobuf::DescriptorPool::generated_pool();
+	assert( pool == fileDescrip->pool() );
+	const google::protobuf::Descriptor * descrip2 = pool->FindMessageTypeByName("helloworld.Iam");
+	assert( descrip2 == descrip );
+	const google::protobuf::Message * prototype = google::protobuf::MessageFactory::generated_factory()->GetPrototype(descrip2);
+	assert( prototype == &helloworld::Iam::default_instance() );
 	
 	return 0;
 	#endif
