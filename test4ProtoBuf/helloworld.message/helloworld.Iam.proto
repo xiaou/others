@@ -9,7 +9,7 @@ message Iam
 		MAN=1;
 	}
 	required Sex sex = 3;
-	repeated Friend friends = 4;
+	optional Friend friends = 4;
 	optional string str = 5 [default = "xx00"];
 }
 

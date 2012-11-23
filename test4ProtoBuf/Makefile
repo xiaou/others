@@ -15,7 +15,7 @@ all:
 	$(CC) $(CFLAGS) -o reader reader.cpp helloworld.message/helloworld.Iam.pb.cc $(_I) $(_L) $(_l) $(_ProtoBuf)
 
 clean:
-	rm writer
-	rm reader
-	rm msg.txt
+	rm -f writer
+	rm -f reader
+	rm -f msg.txt
 	

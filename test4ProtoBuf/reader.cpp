@@ -16,14 +16,19 @@ int main()
 		return -1;
 	}
 	
-	#if 1
+	#if 0
+	//Descriptor
 	const google::protobuf::Descriptor * descrip = helloworld::Iam::descriptor();
 	assert( descrip == msg.GetDescriptor() );
 	cout << "\n" << descrip->name() << endl;
 	cout << descrip->full_name() << endl;
 	cout << descrip->index() << endl;
+	for(int i = 0; i != descrip->field_count(); i++)
+		cout << descrip->field(i)->name() << ", ";
+	cout << endl;
 	//cout << descrip->DebugString() << endl;
 	
+	//FieldDescriptor
 	const google::protobuf::FieldDescriptor * fieldDescrip = descrip->FindFieldByName("friends");
 	assert(fieldDescrip);
 	cout << "\n" << fieldDescrip->full_name() << endl;	
@@ -31,6 +36,7 @@ int main()
 	
 	assert( fieldDescrip->file() == descrip->file() );
 	
+	//FileDescriptor
 	const google::protobuf::FileDescriptor * fileDescrip = descrip->file();
 	cout << "\n" << fileDescrip->name() << endl;
 	cout << fileDescrip->message_type_count() << endl;
@@ -38,6 +44,7 @@ int main()
 	assert( fileDescrip->FindMessageTypeByName("Iam") == descrip );
 	cout << fileDescrip->message_type(1)->full_name() << endl;
 	
+	//DescriptorPool
 	cout << "\n" << endl;
 	const google::protobuf::DescriptorPool * pool = google::protobuf::DescriptorPool::generated_pool();
 	assert( pool == fileDescrip->pool() );
@@ -46,7 +53,21 @@ int main()
 	const google::protobuf::Message * prototype = google::protobuf::MessageFactory::generated_factory()->GetPrototype(descrip2);
 	assert( prototype == &helloworld::Iam::default_instance() );
 	
-	return 0;
+	//reflection
+	google::protobuf::Message * msg2 = prototype->New();
+	//msg2->CopyFrom(msg);
+	cout << "see[\n" << msg2->DebugString() << "]" << endl;
+	
+	const google::protobuf::Reflection * reflect = msg2->GetReflection();
+	reflect->SetInt32(msg2, descrip->FindFieldByName("id"), 24);
+	reflect->SetString(msg2, descrip->FindFieldByName("name"), "spr2");
+	
+	cout << msg2->DebugString() << endl;
+	
+	delete msg2;
+	
+	
+	return cout << "\nreturn 0;" << endl, 0;
 	#endif
 	
 	cout << "debug string:\n[" << msg.DebugString() << "]\n" << endl;

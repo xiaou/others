@@ -1,6 +1,6 @@
 #! /bin/sh
 
-make
+make clean && make
 echo
 ./writer
 echo
